@@ -1,0 +1,13 @@
+<view class="container">
+  <view class="card" wx:if="{{report}}">
+    <view class="title">{{report.freeReport.title}}</view>
+    <view class="label">{{report.freeReport.label}}</view>
+    <view class="section">{{report.freeReport.summary}}</view>
+    <view class="section"><text class="strong">性格：</text>{{report.freeReport.personality}}</view>
+    <view class="section"><text class="strong">它怎么看你：</text>{{report.freeReport.ownerView}}</view>
+    <button class="primary-btn" bindtap="unlock">解锁完整版</button>
+    <button open-type="share">分享给朋友</button>
+    <view class="muted disclaimer">本报告由 AI 生成，仅供娱乐。</view>
+  </view>
+  <view wx:else class="muted">报告加载中...</view>
+</view>

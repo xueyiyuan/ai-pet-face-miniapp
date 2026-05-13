@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/upload/upload",
+    "pages/report/report"
+  ],
+  "window": {
+    "navigationBarTitleText": "AI宠物面相",
+    "navigationBarBackgroundColor": "#fff6e9",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#fffaf2"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

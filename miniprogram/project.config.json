@@ -1,0 +1,14 @@
+{
+  "description": "AI 宠物面相小程序",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": true,
+    "minified": true
+  },
+  "compileType": "miniprogram",
+  "libVersion": "latest",
+  "appid": "touristappid",
+  "projectname": "ai-pet-face-miniapp",
+  "miniprogramRoot": "./"
+}
