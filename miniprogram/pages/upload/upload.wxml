@@ -3,8 +3,9 @@
     <view class="title">上传宠物照片</view>
     <image wx:if="{{imagePath}}" class="preview" src="{{imagePath}}" mode="aspectFill" />
     <button bindtap="chooseImage">选择照片</button>
+    <view class="path" wx:if="{{imagePath}}">已选择：{{imagePath}}</view>
     <input class="input" placeholder="宠物名字，例如：发财" value="{{petName}}" bindinput="onNameInput" />
-    <button class="primary-btn" loading="{{loading}}" bindtap="createReport">生成面相报告</button>
+    <button class="primary-btn" loading="{{loading}}" bindtap="createReport">上传并生成面相报告</button>
     <view class="muted">建议上传清晰正脸照，猫狗都可以。</view>
   </view>
 </view>

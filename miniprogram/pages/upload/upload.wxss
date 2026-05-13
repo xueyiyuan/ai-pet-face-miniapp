@@ -12,6 +12,13 @@
   background: #f2e6d9;
 }
 
+.path {
+  margin: 16rpx 0 8rpx;
+  font-size: 24rpx;
+  color: #a16a35;
+  word-break: break-all;
+}
+
 .input {
   margin: 24rpx 0;
   padding: 24rpx;

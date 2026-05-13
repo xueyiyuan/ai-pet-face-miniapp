@@ -1,19 +1,68 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const port = process.env.PORT || 3000;
 const reports = new Map();
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase() || '.jpg';
+    cb(null, `${Date.now()}-${uuidv4()}${ext}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const allowedExts = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
+    const mimeLooksLikeImage = file.mimetype && file.mimetype.startsWith('image/');
+
+    if (!mimeLooksLikeImage && !allowedExts.has(ext)) {
+      return cb(new Error('only image files are allowed'));
+    }
+    cb(null, true);
+  }
+});
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json({ limit: '10mb' }));
+app.use('/uploads', express.static(uploadsDir));
 app.use(morgan('dev'));
 
 app.get('/health', (req, res) => {
   res.json({ ok: true, service: 'ai-pet-face-server', ts: new Date().toISOString() });
+});
+
+app.post('/api/uploads/pet-image', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'file is required' });
+  }
+
+  const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  res.json({
+    imageUrl,
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    mimeType: req.file.mimetype,
+    size: req.file.size
+  });
 });
 
 app.post('/api/reports', (req, res) => {
@@ -70,6 +119,14 @@ app.post('/api/payments', (req, res) => {
     payUrl: null,
     success: false
   });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'image file is too large, max 10MB' });
+  }
+  res.status(400).json({ error: err.message || 'bad request' });
 });
 
 app.listen(port, () => {

@@ -7,3 +7,6 @@ dist/
 build/
 coverage/
 .tmp/
+server/uploads/
+uploads/
+server/test.*
