@@ -25,6 +25,8 @@
     <button class="primary-btn" loading="{{loading}}" disabled="{{loading}}" bindtap="generateImage">
       {{loading ? '生成中' : '开始生成'}}
     </button>
+
+    <view wx:if="{{message}}" class="status-message">{{message}}</view>
   </view>
 
   <view wx:if="{{generatedImageUrl}}" class="card result-card">

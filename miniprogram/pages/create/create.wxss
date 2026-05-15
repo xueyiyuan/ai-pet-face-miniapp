@@ -83,6 +83,13 @@
   margin-top: 28rpx;
 }
 
+.status-message {
+  margin-top: 22rpx;
+  color: #8a7867;
+  font-size: 24rpx;
+  line-height: 1.55;
+}
+
 .result-title {
   margin-bottom: 18rpx;
   color: #2f241d;

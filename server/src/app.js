@@ -179,6 +179,25 @@ function findImagePayload(value) {
   return null;
 }
 
+async function fetchWithTimeout(url, options = {}, timeoutMs = imageModelConfig.timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error(`Image relay request timed out after ${Math.round(timeoutMs / 1000)} seconds`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function saveGeneratedImage(req, payload) {
   const filenameBase = `${Date.now()}-${uuidv4()}`;
 
@@ -190,7 +209,7 @@ async function saveGeneratedImage(req, payload) {
   }
 
   if (payload.type === 'url') {
-    const response = await fetch(payload.value);
+    const response = await fetchWithTimeout(payload.value, {}, 30000);
     if (!response.ok) {
       throw new Error(`Failed to download generated image: ${response.status}`);
     }
@@ -227,13 +246,19 @@ async function callImageRelay(req, file, prompt) {
   if (imageModelConfig.quality) form.append('quality', imageModelConfig.quality);
   if (imageModelConfig.background) form.append('background', imageModelConfig.background);
 
-  const response = await fetch(getRelayEndpoint(), {
+  const endpoint = getRelayEndpoint();
+  const startedAt = Date.now();
+  console.log(`[image-generation] calling relay model=${imageModelConfig.model} endpoint=${endpoint}`);
+
+  const response = await fetchWithTimeout(endpoint, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${imageModelConfig.apiKey}`
     },
     body: form
-  });
+  }, imageModelConfig.timeoutMs);
+
+  console.log(`[image-generation] relay responded status=${response.status} elapsedMs=${Date.now() - startedAt}`);
 
   const text = await response.text();
   let data;
@@ -295,7 +320,8 @@ app.get('/health', (req, res) => {
       baseUrl: imageModelConfig.baseUrl,
       editPath: imageModelConfig.editPath,
       model: imageModelConfig.model,
-      configured: Boolean(imageModelConfig.apiKey)
+      configured: Boolean(imageModelConfig.apiKey),
+      timeoutMs: imageModelConfig.timeoutMs
     },
     storage: {
       uploadsDir,
@@ -375,6 +401,7 @@ app.post('/api/image-generations', imageUpload.single('file'), async (req, res, 
     }
 
     const inputImageUrl = publicUrl(req, 'uploads', req.file.filename);
+    console.log(`[image-generation] received file=${req.file.filename} size=${req.file.size} promptLength=${prompt.length}`);
     const generatedImageUrl = await callImageRelay(req, req.file, prompt);
     const record = {
       generationId: uuidv4(),

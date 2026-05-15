@@ -5,6 +5,7 @@ Page({
     imagePath: '',
     prompt: '',
     generatedImageUrl: '',
+    message: '',
     loading: false
   },
 
@@ -49,13 +50,14 @@ Page({
     }
     if (this.data.loading) return;
 
-    this.setData({ loading: true, generatedImageUrl: '' });
+    this.setData({ loading: true, generatedImageUrl: '', message: '图片已上传，正在请求模型生成，请稍等...' });
     wx.showLoading({ title: '生成中' });
 
     wx.uploadFile({
       url: `${app.globalData.apiBase}/api/image-generations`,
       filePath: this.data.imagePath,
       name: 'file',
+      timeout: 180000,
       formData: {
         prompt
       },
@@ -64,20 +66,33 @@ Page({
         try {
           data = JSON.parse(res.data || '{}');
         } catch (err) {
+          this.setData({ message: '后端返回的不是 JSON，请查看服务器日志。' });
           wx.showToast({ title: '接口返回异常', icon: 'none' });
           return;
         }
 
         if (res.statusCode < 200 || res.statusCode >= 300 || !data.generatedImageUrl) {
-          wx.showToast({ title: data.error || '生成失败', icon: 'none' });
+          const message = data.error || `生成失败，状态码 ${res.statusCode}`;
+          this.setData({ message });
+          wx.showModal({
+            title: '生成失败',
+            content: message,
+            showCancel: false
+          });
           return;
         }
 
-        this.setData({ generatedImageUrl: data.generatedImageUrl });
+        this.setData({ generatedImageUrl: data.generatedImageUrl, message: '生成成功' });
         wx.showToast({ title: '生成成功', icon: 'success' });
       },
-      fail: () => {
-        wx.showToast({ title: '请求失败，请确认后端已启动', icon: 'none' });
+      fail: (err) => {
+        const message = err && err.errMsg ? err.errMsg : '请求失败，请确认后端已启动';
+        this.setData({ message });
+        wx.showModal({
+          title: '请求失败',
+          content: message,
+          showCancel: false
+        });
       },
       complete: () => {
         wx.hideLoading();
