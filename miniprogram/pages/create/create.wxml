@@ -1,0 +1,35 @@
+<view class="container">
+  <view class="page-title">AI 生成图片</view>
+
+  <view class="card">
+    <button class="image-picker" bindtap="chooseImage">
+      <image wx:if="{{imagePath}}" class="preview" src="{{imagePath}}" mode="aspectFill" />
+      <view wx:else class="placeholder">
+        <view class="plus">+</view>
+        <view>选择参考照片</view>
+      </view>
+    </button>
+
+    <view class="field">
+      <view class="field-label">你想生成什么</view>
+      <textarea
+        class="prompt"
+        placeholder="例如：把这张照片变成温暖的吉卜力风格插画，背景是春天的公园"
+        value="{{prompt}}"
+        maxlength="500"
+        bindinput="onPromptInput"
+      />
+      <view class="counter">{{prompt.length}} / 500</view>
+    </view>
+
+    <button class="primary-btn" loading="{{loading}}" disabled="{{loading}}" bindtap="generateImage">
+      {{loading ? '生成中' : '开始生成'}}
+    </button>
+  </view>
+
+  <view wx:if="{{generatedImageUrl}}" class="card result-card">
+    <view class="result-title">生成结果</view>
+    <image class="result-image" src="{{generatedImageUrl}}" mode="widthFix" show-menu-by-longpress="true" />
+    <button class="secondary-btn" bindtap="previewResult">查看大图</button>
+  </view>
+</view>

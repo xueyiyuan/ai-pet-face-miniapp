@@ -45,6 +45,22 @@
   margin-top: 48rpx;
 }
 
+.secondary-btn {
+  width: 100%;
+  height: 88rpx;
+  margin-top: 20rpx;
+  color: #247653;
+  background: #eaf6f0;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  line-height: 88rpx;
+}
+
+.secondary-btn::after {
+  border: 0;
+}
+
 .notice {
   margin-top: 28rpx;
   color: #8c7a69;

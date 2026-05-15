@@ -7,36 +7,44 @@ const cors = require('cors');
 const morgan = require('morgan');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
+const imageModelConfig = require('./config/imageModel');
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
-const baseUrl = process.env.PUBLIC_BASE_URL || '';
+const publicBaseUrl = process.env.PUBLIC_BASE_URL || '';
 const uploadsDir = path.join(__dirname, '..', 'uploads');
+const generatedDir = path.join(__dirname, '..', 'generated');
 const dataDir = path.join(__dirname, '..', 'data');
 const reportsFile = path.join(dataDir, 'reports.json');
+const generationsFile = path.join(dataDir, 'image-generations.json');
 
 fs.mkdirSync(uploadsDir, { recursive: true });
+fs.mkdirSync(generatedDir, { recursive: true });
 fs.mkdirSync(dataDir, { recursive: true });
 
-function readReports() {
-  if (!fs.existsSync(reportsFile)) return [];
+function readJsonFile(filePath, fallback) {
+  if (!fs.existsSync(filePath)) return fallback;
 
   try {
-    const raw = fs.readFileSync(reportsFile, 'utf8');
-    return JSON.parse(raw || '[]');
+    const raw = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(raw || JSON.stringify(fallback));
   } catch (err) {
-    console.error('Failed to read reports file:', err);
-    return [];
+    console.error(`Failed to read ${filePath}:`, err);
+    return fallback;
   }
 }
 
-function writeReports(reports) {
-  fs.writeFileSync(reportsFile, JSON.stringify(reports, null, 2), 'utf8');
+function writeJsonFile(filePath, data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
 function getRequestBaseUrl(req) {
-  if (baseUrl) return baseUrl.replace(/\/$/, '');
+  if (publicBaseUrl) return publicBaseUrl.replace(/\/$/, '');
   return `${req.protocol}://${req.get('host')}`;
+}
+
+function publicUrl(req, folder, filename) {
+  return `${getRequestBaseUrl(req)}/${folder}/${filename}`;
 }
 
 function pick(seed, items) {
@@ -128,6 +136,126 @@ function generateReport({ petName, petType, imageUrl }) {
   };
 }
 
+function getRelayEndpoint() {
+  const base = imageModelConfig.baseUrl.replace(/\/$/, '');
+  const pathPart = imageModelConfig.editPath.startsWith('/')
+    ? imageModelConfig.editPath
+    : `/${imageModelConfig.editPath}`;
+  return `${base}${pathPart}`;
+}
+
+function getGeneratedFileExtension(contentType, preferredFormat) {
+  if (contentType && contentType.includes('jpeg')) return '.jpg';
+  if (contentType && contentType.includes('webp')) return '.webp';
+  if (contentType && contentType.includes('png')) return '.png';
+  return `.${preferredFormat || 'png'}`;
+}
+
+function findImagePayload(value) {
+  if (!value || typeof value !== 'object') return null;
+
+  if (typeof value.b64_json === 'string') {
+    return { type: 'base64', value: value.b64_json };
+  }
+  if (typeof value.image_base64 === 'string') {
+    return { type: 'base64', value: value.image_base64 };
+  }
+  if (typeof value.url === 'string') {
+    return { type: 'url', value: value.url };
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findImagePayload(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  for (const item of Object.values(value)) {
+    const found = findImagePayload(item);
+    if (found) return found;
+  }
+  return null;
+}
+
+async function saveGeneratedImage(req, payload) {
+  const filenameBase = `${Date.now()}-${uuidv4()}`;
+
+  if (payload.type === 'base64') {
+    const filename = `${filenameBase}.${imageModelConfig.outputFormat || 'png'}`;
+    const filePath = path.join(generatedDir, filename);
+    fs.writeFileSync(filePath, Buffer.from(payload.value, 'base64'));
+    return publicUrl(req, 'generated', filename);
+  }
+
+  if (payload.type === 'url') {
+    const response = await fetch(payload.value);
+    if (!response.ok) {
+      throw new Error(`Failed to download generated image: ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    const ext = getGeneratedFileExtension(contentType, imageModelConfig.outputFormat);
+    const filename = `${filenameBase}${ext}`;
+    const filePath = path.join(generatedDir, filename);
+    const arrayBuffer = await response.arrayBuffer();
+    fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+    return publicUrl(req, 'generated', filename);
+  }
+
+  throw new Error('Unsupported generated image payload');
+}
+
+async function callImageRelay(req, file, prompt) {
+  if (typeof fetch !== 'function' || typeof FormData !== 'function' || typeof Blob !== 'function') {
+    throw new Error('Image generation requires Node.js 18 or newer');
+  }
+  if (!imageModelConfig.apiKey) {
+    throw new Error('IMAGE_RELAY_API_KEY is not configured');
+  }
+
+  const imageBuffer = fs.readFileSync(file.path);
+  const form = new FormData();
+  form.append('model', imageModelConfig.model);
+  form.append('prompt', prompt);
+  form.append('image', new Blob([imageBuffer], { type: file.mimetype || 'image/png' }), file.originalname || 'input.png');
+  form.append('n', String(imageModelConfig.n));
+  form.append('size', imageModelConfig.size);
+  form.append('output_format', imageModelConfig.outputFormat);
+
+  if (imageModelConfig.quality) form.append('quality', imageModelConfig.quality);
+  if (imageModelConfig.background) form.append('background', imageModelConfig.background);
+
+  const response = await fetch(getRelayEndpoint(), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${imageModelConfig.apiKey}`
+    },
+    body: form
+  });
+
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    throw new Error(`Image relay returned non-JSON response: ${text.slice(0, 200)}`);
+  }
+
+  if (!response.ok) {
+    const message = data.error && (data.error.message || data.error);
+    throw new Error(message || `Image relay request failed: ${response.status}`);
+  }
+
+  const imagePayload = findImagePayload(data);
+  if (!imagePayload) {
+    throw new Error('Image relay response did not include an image');
+  }
+
+  return saveGeneratedImage(req, imagePayload);
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => {
@@ -136,10 +264,10 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({
+const imageUpload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024
+    fileSize: imageModelConfig.maxInputBytes
   },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname || '').toLowerCase();
@@ -147,7 +275,7 @@ const upload = multer({
     const mimeLooksLikeImage = file.mimetype && file.mimetype.startsWith('image/');
 
     if (!mimeLooksLikeImage && !allowedExts.has(ext)) {
-      return cb(new Error('仅支持 jpg、jpeg、png、gif、webp 图片文件'));
+      return cb(new Error('Only jpg, jpeg, png, gif and webp image files are allowed'));
     }
     cb(null, true);
   }
@@ -156,28 +284,36 @@ const upload = multer({
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(uploadsDir));
+app.use('/generated', express.static(generatedDir));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.get('/health', (req, res) => {
   res.json({
     ok: true,
     service: 'ai-pet-face-server',
+    imageModel: {
+      baseUrl: imageModelConfig.baseUrl,
+      editPath: imageModelConfig.editPath,
+      model: imageModelConfig.model,
+      configured: Boolean(imageModelConfig.apiKey)
+    },
     storage: {
       uploadsDir,
-      reportsFile
+      generatedDir,
+      reportsFile,
+      generationsFile
     },
     ts: new Date().toISOString()
   });
 });
 
-app.post('/api/uploads/pet-image', upload.single('file'), (req, res) => {
+app.post('/api/uploads/pet-image', imageUpload.single('file'), (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: '请上传宠物图片' });
+    return res.status(400).json({ error: 'Please upload an image' });
   }
 
-  const imageUrl = `${getRequestBaseUrl(req)}/uploads/${req.file.filename}`;
   res.json({
-    imageUrl,
+    imageUrl: publicUrl(req, 'uploads', req.file.filename),
     filename: req.file.filename,
     originalName: req.file.originalname,
     mimeType: req.file.mimetype,
@@ -193,9 +329,9 @@ app.post('/api/reports', (req, res) => {
   }
 
   const report = generateReport({ imageUrl, petName, petType });
-  const reports = readReports();
+  const reports = readJsonFile(reportsFile, []);
   reports.unshift(report);
-  writeReports(reports);
+  writeJsonFile(reportsFile, reports);
 
   res.json({
     reportId: report.reportId,
@@ -206,20 +342,20 @@ app.post('/api/reports', (req, res) => {
 });
 
 app.get('/api/reports/:id', (req, res) => {
-  const report = readReports().find((item) => item.reportId === req.params.id);
+  const report = readJsonFile(reportsFile, []).find((item) => item.reportId === req.params.id);
   if (!report) return res.status(404).json({ error: 'report not found' });
   res.json(report);
 });
 
 app.post('/api/reports/:id/unlock', (req, res) => {
-  const reports = readReports();
+  const reports = readJsonFile(reportsFile, []);
   const report = reports.find((item) => item.reportId === req.params.id);
 
   if (!report) return res.status(404).json({ error: 'report not found' });
 
   report.isPaid = true;
   report.updatedAt = new Date().toISOString();
-  writeReports(reports);
+  writeJsonFile(reportsFile, reports);
 
   res.json({
     ok: true,
@@ -227,11 +363,42 @@ app.post('/api/reports/:id/unlock', (req, res) => {
   });
 });
 
+app.post('/api/image-generations', imageUpload.single('file'), async (req, res, next) => {
+  try {
+    const prompt = (req.body && req.body.prompt ? String(req.body.prompt) : '').trim();
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please upload an image' });
+    }
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    const inputImageUrl = publicUrl(req, 'uploads', req.file.filename);
+    const generatedImageUrl = await callImageRelay(req, req.file, prompt);
+    const record = {
+      generationId: uuidv4(),
+      prompt,
+      inputImageUrl,
+      generatedImageUrl,
+      model: imageModelConfig.model,
+      createdAt: new Date().toISOString()
+    };
+    const generations = readJsonFile(generationsFile, []);
+    generations.unshift(record);
+    writeJsonFile(generationsFile, generations);
+
+    res.json(record);
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.post('/api/payments', (req, res) => {
   res.json({
     ok: true,
     mode: 'mock',
-    message: '本地 MVP 使用模拟支付。生产环境请接入微信支付后再开放付费。'
+    message: 'Local MVP uses mock payment. Integrate WeChat Pay before production paid access.'
   });
 });
 
@@ -242,7 +409,7 @@ app.post('/api/payments/wechat/callback', (req, res) => {
 app.use((err, req, res, next) => {
   console.error(err);
   if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ error: '图片不能超过 10MB' });
+    return res.status(413).json({ error: `Image file is too large, max ${Math.round(imageModelConfig.maxInputBytes / 1024 / 1024)}MB` });
   }
   res.status(400).json({ error: err.message || 'bad request' });
 });

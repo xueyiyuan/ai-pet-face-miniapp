@@ -1,9 +1,10 @@
 <view class="container index-page">
   <view class="hero">
-    <view class="brand">AI 宠物面相</view>
-    <view class="title">看看你家毛孩子的隐藏气质</view>
-    <view class="subtitle">上传一张宠物照片，生成可分享的性格、关系和好运报告。</view>
-    <button class="primary-btn start-btn" bindtap="goUpload">开始生成</button>
-    <view class="notice">报告仅供娱乐，不构成医疗、诊断或命理建议。</view>
+    <view class="brand">AI 创意小工具</view>
+    <view class="title">上传照片，用文字生成新图片</view>
+    <view class="subtitle">可以上传任意照片，再输入你的想法，例如换风格、换场景、生成头像或海报。</view>
+    <button class="primary-btn start-btn" bindtap="goCreate">AI 生成图片</button>
+    <button class="secondary-btn" bindtap="goUpload">宠物面相报告</button>
+    <view class="notice">图片生成依赖后端配置的中转站模型；请勿上传违法、侵权或敏感图片。</view>
   </view>
 </view>

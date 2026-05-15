@@ -9,5 +9,6 @@ coverage/
 .tmp/
 server/uploads/
 server/data/
+server/generated/
 uploads/
 server/test.*

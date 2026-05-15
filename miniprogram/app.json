@@ -1,11 +1,12 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/create/create",
     "pages/upload/upload",
     "pages/report/report"
   ],
   "window": {
-    "navigationBarTitleText": "AI 宠物面相",
+    "navigationBarTitleText": "AI 图片生成",
     "navigationBarBackgroundColor": "#fff8ef",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#fffaf4"

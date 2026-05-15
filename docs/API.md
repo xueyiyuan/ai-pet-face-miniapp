@@ -6,6 +6,31 @@
 GET /health
 ```
 
+## 生成图片
+
+```http
+POST /api/image-generations
+Content-Type: multipart/form-data
+
+file=<参考图片>
+prompt=<生成描述>
+```
+
+后端会调用 `server/src/config/imageModel.js` 中配置的 OpenAI 兼容中转站，默认模型名为 `gpt-image-2`。
+
+返回：
+
+```json
+{
+  "generationId": "uuid",
+  "prompt": "把这张照片变成插画",
+  "inputImageUrl": "https://example.com/uploads/input.png",
+  "generatedImageUrl": "https://example.com/generated/output.png",
+  "model": "gpt-image-2",
+  "createdAt": "2026-05-15T00:00:00.000Z"
+}
+```
+
 ## 上传宠物图片
 
 ```http
