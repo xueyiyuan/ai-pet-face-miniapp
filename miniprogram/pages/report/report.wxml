@@ -1,13 +1,52 @@
 <view class="container">
-  <view class="card" wx:if="{{report}}">
-    <view class="title">{{report.freeReport.title}}</view>
-    <view class="label">{{report.freeReport.label}}</view>
-    <view class="section">{{report.freeReport.summary}}</view>
-    <view class="section"><text class="strong">性格：</text>{{report.freeReport.personality}}</view>
-    <view class="section"><text class="strong">它怎么看你：</text>{{report.freeReport.ownerView}}</view>
-    <button class="primary-btn" bindtap="unlock">解锁完整版</button>
-    <button open-type="share">分享给朋友</button>
-    <view class="muted disclaimer">本报告由 AI 生成，仅供娱乐。</view>
+  <view wx:if="{{loading}}" class="state">报告加载中...</view>
+
+  <view wx:elif="{{report}}" class="report">
+    <image class="cover" src="{{report.imageUrl}}" mode="aspectFill" />
+
+    <view class="card main-card">
+      <view class="title">{{report.freeReport.title}}</view>
+      <view class="label">{{report.freeReport.label}}</view>
+      <view class="summary">{{report.freeReport.summary}}</view>
+
+      <view class="section">
+        <view class="section-title">性格分析</view>
+        <view class="section-body">{{report.freeReport.personality}}</view>
+      </view>
+
+      <view class="section">
+        <view class="section-title">它怎么看你</view>
+        <view class="section-body">{{report.freeReport.ownerView}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{report.isPaid}}" class="card paid-card">
+      <view class="section-title">完整版报告</view>
+      <view class="paid-item">深度性格：{{report.paidReport.deepPersonality}}</view>
+      <view class="paid-item">福气运势：{{report.paidReport.fortune}}</view>
+      <view class="paid-item">关系解读：{{report.paidReport.relationship}}</view>
+      <view class="paid-item">健康观察：{{report.paidReport.healthTips}}</view>
+      <view class="paid-grid">
+        <view class="paid-chip">幸运物：{{report.paidReport.luckyItem}}</view>
+        <view class="paid-chip">幸运零食：{{report.paidReport.luckyFood}}</view>
+      </view>
+      <view class="exclusive">{{report.paidReport.exclusiveComment}}</view>
+    </view>
+
+    <view wx:else class="card locked-card">
+      <view class="section-title">完整版内容</view>
+      <view class="locked-list">深度性格、福气运势、关系解读、健康观察、幸运物和专属点评</view>
+      <button class="primary-btn" loading="{{unlocking}}" disabled="{{unlocking}}" bindtap="unlock">
+        {{unlocking ? '解锁中' : '模拟解锁'}}
+      </button>
+    </view>
+
+    <button class="share-btn" open-type="share">分享给朋友</button>
+    <view class="muted disclaimer">本报告由程序生成，仅供娱乐；健康异常请咨询专业兽医。</view>
   </view>
-  <view wx:else class="muted">报告加载中...</view>
+
+  <view wx:else class="state">
+    <view>{{error || '报告不存在'}}</view>
+    <button class="primary-btn retry-btn" bindtap="goUpload">重新生成</button>
+  </view>
 </view>

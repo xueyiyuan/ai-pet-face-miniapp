@@ -12,7 +12,7 @@ GET /health
 POST /api/uploads/pet-image
 Content-Type: multipart/form-data
 
-file=<宠物图片文件>
+file=<图片文件>
 ```
 
 返回：
@@ -27,13 +27,7 @@ file=<宠物图片文件>
 }
 ```
 
-限制：
-
-- 仅允许图片文件
-- 单文件最大 10MB
-- 本地开发保存到 `server/uploads/`
-
-## 创建宠物报告
+## 创建报告
 
 ```http
 POST /api/reports
@@ -53,7 +47,7 @@ Content-Type: application/json
   "reportId": "demo-report-id",
   "isPaid": false,
   "freeReport": {},
-  "paidPreview": ["deepPersonality", "fortune", "healthTips"]
+  "paidPreview": ["deepPersonality", "fortune", "relationship"]
 }
 ```
 
@@ -63,14 +57,15 @@ Content-Type: application/json
 GET /api/reports/:id
 ```
 
-## 创建支付订单，预留
+## 模拟解锁完整版
+
+```http
+POST /api/reports/:id/unlock
+```
+
+## 支付预留
 
 ```http
 POST /api/payments
-```
-
-## 支付回调，预留
-
-```http
 POST /api/payments/wechat/callback
 ```

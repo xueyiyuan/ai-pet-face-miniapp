@@ -4,11 +4,25 @@
     "urlCheck": false,
     "es6": true,
     "postcss": true,
-    "minified": true
+    "minified": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "compileType": "miniprogram",
   "libVersion": "latest",
-  "appid": "touristappid",
+  "appid": "wx71b7ffdcc1836f04",
   "projectname": "ai-pet-face-miniapp",
-  "miniprogramRoot": "./"
+  "miniprogramRoot": "",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
 }

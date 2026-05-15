@@ -8,5 +8,6 @@ build/
 coverage/
 .tmp/
 server/uploads/
+server/data/
 uploads/
 server/test.*

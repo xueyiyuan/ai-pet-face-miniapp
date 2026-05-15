@@ -1,11 +1,32 @@
 <view class="container">
+  <view class="page-title">上传宠物照片</view>
+
   <view class="card">
-    <view class="title">上传宠物照片</view>
-    <image wx:if="{{imagePath}}" class="preview" src="{{imagePath}}" mode="aspectFill" />
-    <button bindtap="chooseImage">选择照片</button>
-    <view class="path" wx:if="{{imagePath}}">已选择：{{imagePath}}</view>
-    <input class="input" placeholder="宠物名字，例如：发财" value="{{petName}}" bindinput="onNameInput" />
-    <button class="primary-btn" loading="{{loading}}" bindtap="createReport">上传并生成面相报告</button>
-    <view class="muted">建议上传清晰正脸照，猫狗都可以。</view>
+    <button class="image-picker" bindtap="chooseImage">
+      <image wx:if="{{imagePath}}" class="preview" src="{{imagePath}}" mode="aspectFill" />
+      <view wx:else class="placeholder">
+        <view class="plus">+</view>
+        <view>选择照片</view>
+      </view>
+    </button>
+
+    <view class="field">
+      <view class="field-label">宠物名字</view>
+      <input class="input" placeholder="例如：发财" value="{{petName}}" bindinput="onNameInput" maxlength="12" />
+    </view>
+
+    <view class="field">
+      <view class="field-label">宠物类型</view>
+      <view class="type-switch">
+        <view class="type-option {{petType === 'cat' ? 'active' : ''}}" data-type="cat" bindtap="selectPetType">猫猫</view>
+        <view class="type-option {{petType === 'dog' ? 'active' : ''}}" data-type="dog" bindtap="selectPetType">狗狗</view>
+        <view class="type-option {{petType === 'other' ? 'active' : ''}}" data-type="other" bindtap="selectPetType">其他</view>
+      </view>
+    </view>
+
+    <button class="primary-btn" loading="{{loading}}" disabled="{{loading}}" bindtap="createReport">
+      {{loading ? '生成中' : '生成报告'}}
+    </button>
+    <view class="muted note">图片会上传到当前本地后端，仅用于生成本次报告。</view>
   </view>
 </view>

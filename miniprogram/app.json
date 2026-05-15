@@ -5,10 +5,10 @@
     "pages/report/report"
   ],
   "window": {
-    "navigationBarTitleText": "AI宠物面相",
-    "navigationBarBackgroundColor": "#fff6e9",
+    "navigationBarTitleText": "AI 宠物面相",
+    "navigationBarBackgroundColor": "#fff8ef",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#fffaf2"
+    "backgroundColor": "#fffaf4"
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

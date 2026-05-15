@@ -1,8 +1,9 @@
-<view class="container">
-  <view class="hero card">
-    <view class="title">AI 宠物面相</view>
-    <view class="subtitle">上传猫狗照片，看看你家主子是什么隐藏命格。</view>
-    <button class="primary-btn" bindtap="goUpload">开始测试</button>
-    <view class="muted tip">报告仅供娱乐，不构成医学或命理建议。</view>
+<view class="container index-page">
+  <view class="hero">
+    <view class="brand">AI 宠物面相</view>
+    <view class="title">看看你家毛孩子的隐藏气质</view>
+    <view class="subtitle">上传一张宠物照片，生成可分享的性格、关系和好运报告。</view>
+    <button class="primary-btn start-btn" bindtap="goUpload">开始生成</button>
+    <view class="notice">报告仅供娱乐，不构成医疗、诊断或命理建议。</view>
   </view>
 </view>
