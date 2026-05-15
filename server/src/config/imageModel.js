@@ -11,7 +11,7 @@ module.exports = {
   quality: process.env.IMAGE_RELAY_QUALITY || '',
   background: process.env.IMAGE_RELAY_BACKGROUND || 'auto',
   n: Number(process.env.IMAGE_RELAY_N || 1),
-  timeoutMs: Number(process.env.IMAGE_RELAY_TIMEOUT_MS || 150000),
+  timeoutMs: Number(process.env.IMAGE_RELAY_TIMEOUT_MS || 300000),
 
   // Upload limit for the source image sent to the relay.
   maxInputBytes: Number(process.env.IMAGE_RELAY_MAX_INPUT_MB || 20) * 1024 * 1024

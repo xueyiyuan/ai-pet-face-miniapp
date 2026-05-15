@@ -23,11 +23,37 @@ prompt=<生成描述>
 ```json
 {
   "generationId": "uuid",
+  "status": "pending",
   "prompt": "把这张照片变成插画",
   "inputImageUrl": "https://example.com/uploads/input.png",
-  "generatedImageUrl": "https://example.com/generated/output.png",
   "model": "gpt-image-2",
   "createdAt": "2026-05-15T00:00:00.000Z"
+}
+```
+
+图片生成是异步任务。提交成功后用 `generationId` 轮询查询结果：
+
+```http
+GET /api/image-generations/:id
+```
+
+生成成功返回：
+
+```json
+{
+  "generationId": "uuid",
+  "status": "succeeded",
+  "generatedImageUrl": "https://example.com/generated/output.png"
+}
+```
+
+生成失败返回：
+
+```json
+{
+  "generationId": "uuid",
+  "status": "failed",
+  "error": "Image relay request timed out after 300 seconds"
 }
 ```
 

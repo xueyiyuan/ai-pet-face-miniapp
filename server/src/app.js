@@ -38,6 +38,28 @@ function writeJsonFile(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
+function upsertGeneration(record) {
+  const generations = readJsonFile(generationsFile, []);
+  const index = generations.findIndex((item) => item.generationId === record.generationId);
+
+  if (index >= 0) {
+    generations[index] = {
+      ...generations[index],
+      ...record,
+      updatedAt: new Date().toISOString()
+    };
+  } else {
+    generations.unshift({
+      ...record,
+      createdAt: record.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  writeJsonFile(generationsFile, generations);
+  return generations[index >= 0 ? index : 0];
+}
+
 function getRequestBaseUrl(req) {
   if (publicBaseUrl) return publicBaseUrl.replace(/\/$/, '');
   return `${req.protocol}://${req.get('host')}`;
@@ -402,23 +424,52 @@ app.post('/api/image-generations', imageUpload.single('file'), async (req, res, 
 
     const inputImageUrl = publicUrl(req, 'uploads', req.file.filename);
     console.log(`[image-generation] received file=${req.file.filename} size=${req.file.size} promptLength=${prompt.length}`);
-    const generatedImageUrl = await callImageRelay(req, req.file, prompt);
     const record = {
       generationId: uuidv4(),
+      status: 'pending',
       prompt,
       inputImageUrl,
-      generatedImageUrl,
       model: imageModelConfig.model,
       createdAt: new Date().toISOString()
     };
-    const generations = readJsonFile(generationsFile, []);
-    generations.unshift(record);
-    writeJsonFile(generationsFile, generations);
 
-    res.json(record);
+    upsertGeneration(record);
+    res.status(202).json(record);
+
+    setImmediate(async () => {
+      try {
+        upsertGeneration({
+          generationId: record.generationId,
+          status: 'running'
+        });
+
+        const generatedImageUrl = await callImageRelay(req, req.file, prompt);
+
+        upsertGeneration({
+          generationId: record.generationId,
+          status: 'succeeded',
+          generatedImageUrl,
+          completedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error(`[image-generation] failed generationId=${record.generationId}:`, err);
+        upsertGeneration({
+          generationId: record.generationId,
+          status: 'failed',
+          error: err.message || 'Image generation failed',
+          completedAt: new Date().toISOString()
+        });
+      }
+    });
   } catch (err) {
     next(err);
   }
+});
+
+app.get('/api/image-generations/:id', (req, res) => {
+  const record = readJsonFile(generationsFile, []).find((item) => item.generationId === req.params.id);
+  if (!record) return res.status(404).json({ error: 'generation not found' });
+  res.json(record);
 });
 
 app.post('/api/payments', (req, res) => {
