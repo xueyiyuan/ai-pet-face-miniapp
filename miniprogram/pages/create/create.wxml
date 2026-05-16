@@ -34,4 +34,11 @@
     <image class="result-image" src="{{generatedImageUrl}}" mode="widthFix" show-menu-by-longpress="true" />
     <button class="secondary-btn" bindtap="previewResult">查看大图</button>
   </view>
+
+  <ad
+    wx:if="{{generatedImageUrl && adConfig.bannerResultAdUnitId}}"
+    unit-id="{{adConfig.bannerResultAdUnitId}}"
+    ad-type="banner"
+    class="ad-banner"
+  />
 </view>

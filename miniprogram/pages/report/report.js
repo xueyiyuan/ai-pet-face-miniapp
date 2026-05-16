@@ -1,4 +1,7 @@
 const app = getApp();
+const adConfig = require('../../config/ad');
+
+let unlockRewardedVideoAd = null;
 
 Page({
   data: {
@@ -6,12 +9,27 @@ Page({
     report: null,
     loading: true,
     unlocking: false,
-    error: ''
+    error: '',
+    adConfig
   },
 
   onLoad(query) {
     this.setData({ id: query.id || '' });
     this.fetchReport();
+  },
+
+  onReady() {
+    this.initUnlockAd();
+  },
+
+  initUnlockAd() {
+    const adUnitId = adConfig.rewardedUnlockAdUnitId;
+    if (!adUnitId || !wx.createRewardedVideoAd) return;
+
+    unlockRewardedVideoAd = wx.createRewardedVideoAd({ adUnitId });
+    unlockRewardedVideoAd.onError((err) => {
+      console.error('unlock rewarded video ad error:', err);
+    });
   },
 
   fetchReport() {
@@ -40,14 +58,26 @@ Page({
   unlock() {
     if (this.data.unlocking || !this.data.id) return;
 
-    wx.showModal({
-      title: '模拟解锁',
-      content: '本地 MVP 会直接展示完整版；上线前请替换为微信支付。',
-      confirmText: '解锁',
-      success: (modalRes) => {
-        if (!modalRes.confirm) return;
+    if (!unlockRewardedVideoAd) {
+      this.requestUnlock();
+      return;
+    }
+
+    unlockRewardedVideoAd.offClose();
+    unlockRewardedVideoAd.onClose((res) => {
+      if (res && res.isEnded) {
         this.requestUnlock();
+      } else {
+        wx.showToast({ title: '看完广告后可解锁', icon: 'none' });
       }
+    });
+
+    unlockRewardedVideoAd.show().catch(() => {
+      unlockRewardedVideoAd.load()
+        .then(() => unlockRewardedVideoAd.show())
+        .catch(() => {
+          wx.showToast({ title: '广告暂不可用', icon: 'none' });
+        });
     });
   },
 

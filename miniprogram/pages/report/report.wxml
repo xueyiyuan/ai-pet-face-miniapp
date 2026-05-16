@@ -37,7 +37,7 @@
       <view class="section-title">完整版内容</view>
       <view class="locked-list">深度性格、福气运势、关系解读、健康观察、幸运物和专属点评</view>
       <button class="primary-btn" loading="{{unlocking}}" disabled="{{unlocking}}" bindtap="unlock">
-        {{unlocking ? '解锁中' : '模拟解锁'}}
+        {{unlocking ? '解锁中' : '看广告解锁'}}
       </button>
     </view>
 

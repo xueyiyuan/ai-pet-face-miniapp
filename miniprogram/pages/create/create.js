@@ -1,4 +1,7 @@
 const app = getApp();
+const adConfig = require('../../config/ad');
+
+let previewRewardedVideoAd = null;
 
 Page({
   data: {
@@ -7,11 +10,26 @@ Page({
     generatedImageUrl: '',
     generationId: '',
     message: '',
-    loading: false
+    loading: false,
+    adConfig
+  },
+
+  onReady() {
+    this.initPreviewAd();
   },
 
   onUnload() {
     this.clearPolling();
+  },
+
+  initPreviewAd() {
+    const adUnitId = adConfig.rewardedPreviewAdUnitId;
+    if (!adUnitId || !wx.createRewardedVideoAd) return;
+
+    previewRewardedVideoAd = wx.createRewardedVideoAd({ adUnitId });
+    previewRewardedVideoAd.onError((err) => {
+      console.error('preview rewarded video ad error:', err);
+    });
   },
 
   chooseImage() {
@@ -191,6 +209,31 @@ Page({
 
   previewResult() {
     if (!this.data.generatedImageUrl) return;
+
+    if (!previewRewardedVideoAd) {
+      this.openPreview();
+      return;
+    }
+
+    previewRewardedVideoAd.offClose();
+    previewRewardedVideoAd.onClose((res) => {
+      if (res && res.isEnded) {
+        this.openPreview();
+      } else {
+        wx.showToast({ title: '看完广告后可查看大图', icon: 'none' });
+      }
+    });
+
+    previewRewardedVideoAd.show().catch(() => {
+      previewRewardedVideoAd.load()
+        .then(() => previewRewardedVideoAd.show())
+        .catch(() => {
+          wx.showToast({ title: '广告暂不可用', icon: 'none' });
+        });
+    });
+  },
+
+  openPreview() {
     wx.previewImage({
       urls: [this.data.generatedImageUrl],
       current: this.data.generatedImageUrl
