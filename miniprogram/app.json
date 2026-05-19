@@ -1,15 +1,42 @@
 {
   "pages": [
-    "pages/index/index",
-    "pages/create/create",
-    "pages/upload/upload",
-    "pages/report/report"
+    "pages/login/login",
+    "pages/home/home",
+    "pages/dashboard/dashboard",
+    "pages/manage/manage",
+    "pages/me/me",
+    "pages/room/room",
+    "pages/room-form/room-form"
   ],
   "window": {
-    "navigationBarTitleText": "AI 图片生成",
-    "navigationBarBackgroundColor": "#fff8ef",
-    "navigationBarTextStyle": "black",
-    "backgroundColor": "#fffaf4"
+    "navigationBarTitleText": "寓管家",
+    "navigationBarBackgroundColor": "#fb8c00",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f6f8"
+  },
+  "tabBar": {
+    "color": "#8a94a6",
+    "selectedColor": "#fb8c00",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "主页"
+      },
+      {
+        "pagePath": "pages/dashboard/dashboard",
+        "text": "统计"
+      },
+      {
+        "pagePath": "pages/manage/manage",
+        "text": "经营"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的"
+      }
+    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

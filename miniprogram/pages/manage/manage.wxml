@@ -1,0 +1,33 @@
+<view class="page manage-page">
+  <view class="tool-card">
+    <view>
+      <view class="tool-title">经营待办</view>
+      <view class="tool-desc">当前身份：{{role}}</view>
+    </view>
+    <button class="tool-add" bindtap="goCreateRoom">新增房源</button>
+  </view>
+
+  <scroll-view class="tabs" scroll-x enhanced show-scrollbar="{{false}}">
+    <block wx:for="{{tabs}}" wx:key="key">
+      <view class="tab {{type === item.key ? 'active' : ''}}" bindtap="changeTab" data-type="{{item.key}}">{{item.label}}</view>
+    </block>
+  </scroll-view>
+
+  <view wx:if="{{!tasks.length}}" class="empty">暂无待办</view>
+  <block wx:for="{{tasks}}" wx:key="id">
+    <view class="task-card card">
+      <view class="task-main" data-id="{{item.roomId}}" bindtap="goRoom">
+        <view class="task-head">
+          <view class="task-type">{{item.typeText}}</view>
+          <view class="task-status {{item.status === 'done' ? 'done' : ''}}">{{item.statusText}}</view>
+        </view>
+        <view class="task-title">{{item.title}}</view>
+        <view class="task-line">客户：{{item.customer}}</view>
+        <view class="task-line">截止：{{item.dueAt}}</view>
+        <view class="task-amount">¥{{item.amount}}</view>
+      </view>
+      <button wx:if="{{item.status !== 'done'}}" class="handle-btn" data-id="{{item.id}}" bindtap="complete">处理</button>
+    </view>
+  </block>
+  <view class="safe-bottom"></view>
+</view>

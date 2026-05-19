@@ -1,0 +1,44 @@
+<view class="page form-page">
+  <view class="form-card card">
+    <view class="field">
+      <view class="label">小区名称</view>
+      <input value="{{form.community}}" data-key="community" bindinput="input" placeholder="例如：中辉样板" />
+    </view>
+    <view class="field">
+      <view class="label">房号</view>
+      <input value="{{form.roomNo}}" data-key="roomNo" bindinput="input" placeholder="例如：403" />
+    </view>
+    <view class="field">
+      <view class="label">房源地址</view>
+      <input value="{{form.address}}" data-key="address" bindinput="input" placeholder="街道、楼栋、门牌" />
+    </view>
+    <view class="field">
+      <view class="label">户型</view>
+      <input value="{{form.layout}}" data-key="layout" bindinput="input" placeholder="1室1厅1卫" />
+    </view>
+    <view class="field-row">
+      <view class="field half">
+        <view class="label">面积</view>
+        <input type="digit" value="{{form.area}}" data-key="area" bindinput="input" placeholder="㎡" />
+      </view>
+      <view class="field half">
+        <view class="label">租金</view>
+        <input type="number" value="{{form.rent}}" data-key="rent" bindinput="input" placeholder="元/月" />
+      </view>
+    </view>
+    <view class="field">
+      <view class="label">业主姓名</view>
+      <input value="{{form.owner}}" data-key="owner" bindinput="input" placeholder="业主姓名" />
+    </view>
+    <view class="field">
+      <view class="label">业主电话</view>
+      <input type="number" value="{{form.ownerPhone}}" data-key="ownerPhone" bindinput="input" placeholder="手机号" />
+    </view>
+    <view class="field">
+      <view class="label">备注</view>
+      <textarea value="{{form.notes}}" data-key="notes" bindinput="input" placeholder="装修、钥匙、谈判空间等" />
+    </view>
+  </view>
+
+  <button class="primary-btn submit" loading="{{submitting}}" bindtap="submit">提交审核</button>
+</view>

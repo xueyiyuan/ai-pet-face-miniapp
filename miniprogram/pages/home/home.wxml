@@ -1,0 +1,41 @@
+<view class="page home-page">
+  <view class="top-band">
+    <view>
+      <view class="hello">正在经营什么？</view>
+      <view class="headline">把房源、出租、收租放进一个工作台</view>
+    </view>
+    <button class="add-btn" bindtap="goCreateRoom">＋</button>
+  </view>
+
+  <view class="search-row">
+    <input value="{{keyword}}" bindinput="inputKeyword" bindconfirm="search" placeholder="输入小区、房号、业主" confirm-type="search" />
+    <button bindtap="search">搜索</button>
+  </view>
+
+  <scroll-view class="filter-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+    <block wx:for="{{filters}}" wx:key="key">
+      <view class="filter-chip {{status === item.key ? 'active' : ''}}" data-status="{{item.key}}" bindtap="changeFilter">{{item.label}}</view>
+    </block>
+  </scroll-view>
+
+  <view class="section-title">推荐房源</view>
+  <view wx:if="{{!rooms.length && !loading}}" class="empty">暂无房源</view>
+  <block wx:for="{{rooms}}" wx:key="id">
+    <view class="room-card card" data-id="{{item.id}}" bindtap="goRoom">
+      <image class="room-image" mode="aspectFill" src="{{item.image}}" />
+      <view class="room-body">
+        <view class="room-head">
+          <view class="room-title">{{item.title}}</view>
+          <view class="tag {{item.tagClass}}">{{item.statusText}}</view>
+        </view>
+        <view class="room-address">{{item.address}}</view>
+        <view class="room-meta">{{item.area}}㎡ / {{item.layout}} / {{item.direction}}</view>
+        <view class="room-foot">
+          <view><text class="rent">{{item.rent}}</text><text class="rent-unit"> 元/月</text></view>
+          <view class="profit">收益率 {{item.profit}}%</view>
+        </view>
+      </view>
+    </view>
+  </block>
+  <view class="safe-bottom"></view>
+</view>

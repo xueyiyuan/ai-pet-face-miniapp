@@ -1,0 +1,181 @@
+.summary-card {
+  padding: 30rpx;
+  border-radius: 8rpx;
+  background: #172033;
+  color: #fff;
+}
+
+.summary-month {
+  color: #ffbd66;
+  font-size: 25rpx;
+}
+
+.summary-label {
+  margin-top: 18rpx;
+  font-size: 28rpx;
+  opacity: 0.85;
+}
+
+.summary-profit {
+  margin-top: 10rpx;
+  font-size: 58rpx;
+  font-weight: 800;
+}
+
+.summary-row {
+  margin-top: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 25rpx;
+}
+
+.stats-grid {
+  margin-top: 24rpx;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18rpx;
+}
+
+.stat-card {
+  padding: 28rpx;
+}
+
+.stat-value {
+  font-size: 44rpx;
+  font-weight: 800;
+}
+
+.stat-value text {
+  margin-left: 6rpx;
+  font-size: 24rpx;
+  color: #7d8798;
+}
+
+.stat-label {
+  margin-top: 8rpx;
+  color: #7d8798;
+  font-size: 25rpx;
+}
+
+.occupancy {
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+  gap: 34rpx;
+}
+
+.donut {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  background: conic-gradient(#18a058 0 34%, #fb8c00 34% 67%, #8a94a6 67% 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-core {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.legend {
+  flex: 1;
+}
+
+.legend-row {
+  height: 54rpx;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  color: #4b5567;
+  font-size: 26rpx;
+}
+
+.legend-row text {
+  margin-left: auto;
+  color: #172033;
+  font-weight: 700;
+}
+
+.dot {
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  background: #18a058;
+}
+
+.dot-1 {
+  background: #fb8c00;
+}
+
+.dot-2 {
+  background: #8a94a6;
+}
+
+.bar-card {
+  height: 420rpx;
+  padding: 32rpx 20rpx 22rpx;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+}
+
+.bar-item {
+  width: 23%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bar-shell {
+  flex: 1;
+  width: 54rpx;
+  border-radius: 8rpx;
+  background: #eef1f5;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.bar-fill {
+  width: 100%;
+  border-radius: 8rpx 8rpx 0 0;
+  background: #35b779;
+}
+
+.bar-0 {
+  background: #4aa3ff;
+}
+
+.bar-1 {
+  background: #35c6d3;
+}
+
+.bar-2 {
+  background: #ffbd45;
+}
+
+.bar-3 {
+  background: #ff6f61;
+}
+
+.bar-value {
+  margin-top: 14rpx;
+  color: #687386;
+  font-size: 21rpx;
+}
+
+.bar-label {
+  margin-top: 6rpx;
+  color: #172033;
+  font-size: 24rpx;
+}

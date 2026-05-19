@@ -1,0 +1,21 @@
+<view class="login-page">
+  <view class="brand-block">
+    <view class="brand-mark">寓</view>
+    <view class="brand-title">寓管家</view>
+    <view class="brand-subtitle">二手房东经营工作台</view>
+  </view>
+
+  <view class="role-list">
+    <block wx:for="{{roles}}" wx:key="key">
+      <view class="role-card {{selected === item.key ? 'active' : ''}}" bindtap="selectRole" data-role="{{item.key}}">
+        <view>
+          <view class="role-name">{{item.name}}</view>
+          <view class="role-desc">{{item.desc}}</view>
+        </view>
+        <view class="role-check">{{selected === item.key ? '✓' : ''}}</view>
+      </view>
+    </block>
+  </view>
+
+  <button class="primary-btn enter-btn" bindtap="enterApp">进入演示</button>
+</view>

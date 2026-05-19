@@ -1,0 +1,65 @@
+<view class="room-page">
+  <image class="hero-img" mode="aspectFill" src="{{room.image}}" />
+  <view class="content">
+    <view class="title-row">
+      <view>
+        <view class="title">{{room.title}}</view>
+        <view class="address">{{room.address}}</view>
+      </view>
+      <view class="tag {{room.tagClass}}">{{room.statusText}}</view>
+    </view>
+
+    <view class="price-card card">
+      <view>
+        <view class="label">月租</view>
+        <view class="price">¥{{room.rent}}</view>
+      </view>
+      <view>
+        <view class="label">总投入</view>
+        <view class="value">¥{{room.totalCost}}</view>
+      </view>
+      <view>
+        <view class="label">收益率</view>
+        <view class="value green">{{room.profit}}%</view>
+      </view>
+    </view>
+
+    <view class="section-title">房源信息</view>
+    <view class="info card">
+      <view><text>户型</text>{{room.layout}}</view>
+      <view><text>面积</text>{{room.area}}㎡</view>
+      <view><text>楼层</text>{{room.floor}}</view>
+      <view><text>朝向</text>{{room.direction}}</view>
+      <view><text>收房员</text>{{room.collector}}</view>
+      <view><text>出租员</text>{{room.renterText}}</view>
+    </view>
+
+    <view class="section-title">配置</view>
+    <view class="facility-row">
+      <block wx:for="{{room.facilities}}" wx:key="*this">
+        <view>{{item}}</view>
+      </block>
+    </view>
+
+    <view class="section-title">联系人</view>
+    <view class="contact card">
+      <view class="contact-row">
+        <view>
+          <view class="contact-name">业主 {{room.owner}}</view>
+          <view class="contact-phone">{{room.ownerPhone}}</view>
+        </view>
+        <button bindtap="callOwner">电话</button>
+      </view>
+      <view class="contact-row">
+        <view>
+          <view class="contact-name">租客 {{room.tenantText}}</view>
+          <view class="contact-phone">{{room.tenantPhoneText}}</view>
+        </view>
+        <button bindtap="callTenant">电话</button>
+      </view>
+    </view>
+
+    <view class="notes card">{{room.notes}}</view>
+    <button class="primary-btn action" bindtap="openTask">查看相关待办</button>
+  </view>
+</view>

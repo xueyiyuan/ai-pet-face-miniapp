@@ -1,0 +1,57 @@
+.profile {
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+}
+
+.avatar {
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 8rpx;
+  background: #eef7f2;
+  color: #18a058;
+  font-size: 48rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.name {
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.phone {
+  margin-top: 10rpx;
+  color: #7d8798;
+  font-size: 25rpx;
+}
+
+.menu {
+  margin-top: 24rpx;
+}
+
+.menu-item {
+  min-height: 96rpx;
+  padding: 0 28rpx;
+  border-bottom: 2rpx solid #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 29rpx;
+}
+
+.menu-item:last-child {
+  border-bottom: 0;
+}
+
+.menu-item text {
+  color: #a3abb8;
+  font-size: 46rpx;
+}
+
+.switch-btn {
+  margin-top: 28rpx;
+}

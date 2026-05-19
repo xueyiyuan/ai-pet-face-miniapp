@@ -1,0 +1,50 @@
+<view class="page dashboard-page">
+  <view class="summary-card">
+    <view class="summary-month">{{dashboard.finance.month}}</view>
+    <view class="summary-label">收支统计</view>
+    <view class="summary-profit">¥{{dashboard.finance.profit}}</view>
+    <view class="summary-row">
+      <view>收入 ¥{{dashboard.finance.income}}</view>
+      <view>支出 ¥{{dashboard.finance.expense}}</view>
+    </view>
+  </view>
+
+  <view class="stats-grid">
+    <block wx:for="{{dashboard.stats}}" wx:key="label">
+      <view class="stat-card card">
+        <view class="stat-value">{{item.value}}<text>{{item.unit}}</text></view>
+        <view class="stat-label">{{item.label}}</view>
+      </view>
+    </block>
+  </view>
+
+  <view class="section-title">出租结构</view>
+  <view class="occupancy card">
+    <view class="donut">
+      <view class="donut-core">{{totalRooms}}套</view>
+    </view>
+    <view class="legend">
+      <block wx:for="{{dashboard.occupancy}}" wx:key="label">
+        <view class="legend-row">
+          <view class="dot dot-{{index}}"></view>
+          <view>{{item.label}}</view>
+          <text>{{item.value}}套</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="section-title">月度收支</view>
+  <view class="bar-card card">
+    <block wx:for="{{dashboard.bars}}" wx:key="label">
+      <view class="bar-item">
+        <view class="bar-shell">
+          <view class="bar-fill bar-{{index}}" style="height: {{item.height}}%;"></view>
+        </view>
+        <view class="bar-value">{{item.value}}</view>
+        <view class="bar-label">{{item.label}}</view>
+      </view>
+    </block>
+  </view>
+  <view class="safe-bottom"></view>
+</view>

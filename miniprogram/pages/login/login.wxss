@@ -1,0 +1,82 @@
+.login-page {
+  min-height: 100vh;
+  padding: 72rpx 36rpx 48rpx;
+  background: linear-gradient(180deg, #fb8c00 0%, #fb8c00 34%, #f5f6f8 34%, #f5f6f8 100%);
+}
+
+.brand-block {
+  color: #fff;
+  padding: 24rpx 0 42rpx;
+}
+
+.brand-mark {
+  width: 92rpx;
+  height: 92rpx;
+  border-radius: 8rpx;
+  background: rgba(255, 255, 255, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  font-weight: 800;
+}
+
+.brand-title {
+  margin-top: 24rpx;
+  font-size: 52rpx;
+  font-weight: 800;
+}
+
+.brand-subtitle {
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+.role-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.role-card {
+  min-height: 128rpx;
+  padding: 28rpx;
+  background: #fff;
+  border: 2rpx solid transparent;
+  border-radius: 8rpx;
+  box-shadow: 0 10rpx 28rpx rgba(16, 30, 54, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.role-card.active {
+  border-color: #fb8c00;
+}
+
+.role-name {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.role-desc {
+  margin-top: 10rpx;
+  color: #7d8798;
+  font-size: 25rpx;
+}
+
+.role-check {
+  width: 48rpx;
+  height: 48rpx;
+  color: #18a058;
+  font-size: 34rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.enter-btn {
+  margin-top: 36rpx;
+}

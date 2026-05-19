@@ -1,0 +1,21 @@
+<view class="page me-page">
+  <view class="profile card">
+    <view class="avatar">{{avatar}}</view>
+    <view>
+      <view class="name">{{roleName}}</view>
+      <view class="phone">演示账号 138****8888</view>
+    </view>
+  </view>
+
+  <view class="menu card">
+    <block wx:for="{{menus}}" wx:key="target">
+      <view class="menu-item" bindtap="openMenu" data-target="{{item.target}}">
+        <view>{{item.label}}</view>
+        <text>›</text>
+      </view>
+    </block>
+  </view>
+
+  <button class="primary-btn switch-btn" bindtap="switchRole">切换身份</button>
+  <view class="safe-bottom"></view>
+</view>
