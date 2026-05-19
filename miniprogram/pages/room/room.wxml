@@ -16,11 +16,11 @@
       </view>
       <view>
         <view class="label">总投入</view>
-        <view class="value">¥{{room.totalCost}}</view>
+        <view class="value">{{room.totalCostText}}</view>
       </view>
       <view>
         <view class="label">收益率</view>
-        <view class="value green">{{room.profit}}%</view>
+        <view class="value green">{{room.profitText}}</view>
       </view>
     </view>
 
@@ -46,20 +46,20 @@
       <view class="contact-row">
         <view>
           <view class="contact-name">业主 {{room.owner}}</view>
-          <view class="contact-phone">{{room.ownerPhone}}</view>
+          <view class="contact-phone">{{room.ownerPhoneText}}</view>
         </view>
-        <button bindtap="callOwner">电话</button>
+        <button wx:if="{{room.ownerPhone}}" bindtap="callOwner">电话</button>
       </view>
       <view class="contact-row">
         <view>
           <view class="contact-name">租客 {{room.tenantText}}</view>
           <view class="contact-phone">{{room.tenantPhoneText}}</view>
         </view>
-        <button bindtap="callTenant">电话</button>
+        <button wx:if="{{room.tenantPhone}}" bindtap="callTenant">电话</button>
       </view>
     </view>
 
     <view class="notes card">{{room.notes}}</view>
-    <button class="primary-btn action" bindtap="openTask">查看相关待办</button>
+    <button wx:if="{{canViewTasks}}" class="primary-btn action" bindtap="openTask">查看相关待办</button>
   </view>
 </view>

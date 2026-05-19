@@ -47,9 +47,21 @@
 }
 
 .quick-nav {
-  margin-top: 18rpx;
   display: flex;
   gap: 14rpx;
+}
+
+.quick-nav-wrap {
+  margin-top: 34rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx solid #eceff3;
+}
+
+.quick-title {
+  margin-bottom: 16rpx;
+  color: #687386;
+  font-size: 24rpx;
+  font-weight: 700;
 }
 
 .quick-nav button {
@@ -61,6 +73,11 @@
   font-size: 26rpx;
   line-height: 68rpx;
   box-shadow: 0 6rpx 18rpx rgba(16, 30, 54, 0.06);
+}
+
+.quick-nav .me-btn {
+  background: #fff3e0;
+  color: #fb8c00;
 }
 
 .search-row input {

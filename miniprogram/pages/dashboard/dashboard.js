@@ -14,8 +14,9 @@ Page({
 
   onShow() {
     const app = getApp();
-    this.setData({ role: app.globalData.role || wx.getStorageSync('rental-role') || 'admin' });
-    api.getDashboard().then((dashboard) => {
+    const role = app.globalData.role || wx.getStorageSync('rental-role') || 'admin';
+    this.setData({ role });
+    api.getDashboard(role).then((dashboard) => {
       const total = dashboard.stats && dashboard.stats[0] ? dashboard.stats[0].value : 0;
       this.setData({ dashboard, totalRooms: total });
     });

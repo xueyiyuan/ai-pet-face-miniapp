@@ -10,7 +10,7 @@
     </view>
   </view>
 
-  <button class="create-btn" bindtap="goCreateRoom">新增房源</button>
+  <button wx:if="{{canCreateRoom}}" class="create-btn" bindtap="goCreateRoom">新增房源</button>
 
   <scroll-view class="tabs" scroll-x enhanced show-scrollbar="{{false}}">
     <block wx:for="{{tabs}}" wx:key="key">

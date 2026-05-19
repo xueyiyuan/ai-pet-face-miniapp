@@ -16,12 +16,32 @@ Page({
     submitting: false
   },
 
+  onLoad() {
+    const app = getApp();
+    const role = app.globalData.role || wx.getStorageSync('rental-role') || 'visitor';
+    if (role !== 'admin' && role !== 'collector') {
+      wx.showModal({
+        title: '无权限',
+        content: '当前身份不能新增房源，请切换为管理员或收房员。',
+        showCancel: false,
+        success: () => wx.navigateBack()
+      });
+    }
+  },
+
   input(event) {
     const key = event.currentTarget.dataset.key;
     this.setData({ [`form.${key}`]: event.detail.value });
   },
 
   submit() {
+    const app = getApp();
+    const role = app.globalData.role || wx.getStorageSync('rental-role') || 'visitor';
+    if (role !== 'admin' && role !== 'collector') {
+      wx.showToast({ title: '当前身份无新增权限', icon: 'none' });
+      return;
+    }
+
     const form = this.data.form;
     if (!form.community || !form.roomNo || !form.rent) {
       wx.showToast({ title: '请填写小区、房号、租金', icon: 'none' });

@@ -4,18 +4,21 @@
       <view class="hello">正在经营什么？</view>
       <view class="headline">把房源、出租、收租放进一个工作台</view>
     </view>
-    <button class="add-btn" bindtap="goCreateRoom">＋</button>
-  </view>
-
-  <view class="quick-nav">
-    <button bindtap="goDashboard">统计</button>
-    <button bindtap="goManage">待办</button>
-    <button bindtap="goMe">我的</button>
+    <button wx:if="{{canCreateRoom}}" class="add-btn" bindtap="goCreateRoom">＋</button>
   </view>
 
   <view class="search-row">
     <input value="{{keyword}}" bindinput="inputKeyword" bindconfirm="search" placeholder="输入小区、房号、业主" confirm-type="search" />
     <button bindtap="search">搜索</button>
+  </view>
+
+  <view class="quick-nav-wrap">
+    <view class="quick-title">工作台</view>
+    <view class="quick-nav">
+      <button wx:if="{{canViewDashboard}}" bindtap="goDashboard">统计</button>
+      <button wx:if="{{canViewManage}}" bindtap="goManage">待办</button>
+      <button class="me-btn" bindtap="goMe">我的</button>
+    </view>
   </view>
 
   <scroll-view class="filter-scroll" scroll-x enhanced show-scrollbar="{{false}}">
@@ -38,7 +41,7 @@
         <view class="room-meta">{{item.area}}㎡ / {{item.layout}} / {{item.direction}}</view>
         <view class="room-foot">
           <view><text class="rent">{{item.rent}}</text><text class="rent-unit"> 元/月</text></view>
-          <view class="profit">收益率 {{item.profit}}%</view>
+          <view class="profit">{{item.profitText}}</view>
         </view>
       </view>
     </view>

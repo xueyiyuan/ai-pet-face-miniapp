@@ -235,6 +235,137 @@ function buildDashboard(data) {
   };
 }
 
+function normalizeRole(role) {
+  return ['visitor', 'admin', 'investor', 'collector', 'renter'].includes(role) ? role : 'visitor';
+}
+
+function filterRoomsByRole(rooms, role) {
+  const normalizedRole = normalizeRole(role);
+
+  if (normalizedRole === 'admin' || normalizedRole === 'investor') return rooms;
+  if (normalizedRole === 'visitor') {
+    return rooms.filter((room) => room.status === 'available' || room.status === 'renting');
+  }
+  if (normalizedRole === 'collector') {
+    return rooms.filter((room) => room.status === 'pending' || String(room.collector || '').includes('收房员'));
+  }
+  if (normalizedRole === 'renter') {
+    return rooms.filter((room) => room.status === 'available' || room.status === 'renting' || Boolean(room.renter));
+  }
+
+  return [];
+}
+
+function filterTasksByRole(tasks, role) {
+  const normalizedRole = normalizeRole(role);
+
+  if (normalizedRole === 'admin') return tasks;
+  if (normalizedRole === 'collector') {
+    return tasks.filter((task) => task.assigneeRole === 'collector' || task.type === 'collect');
+  }
+  if (normalizedRole === 'renter') {
+    return tasks.filter((task) => task.assigneeRole === 'renter' || ['outbound', 'lease', 'rent'].includes(task.type));
+  }
+
+  return [];
+}
+
+function sanitizeRoomForRole(room, role) {
+  const normalizedRole = normalizeRole(role);
+  const publicRoom = {
+    id: room.id,
+    title: room.title,
+    community: room.community,
+    address: room.address,
+    layout: room.layout,
+    area: room.area,
+    floor: room.floor,
+    direction: room.direction,
+    status: room.status,
+    statusText: room.statusText,
+    rent: room.rent,
+    image: room.image,
+    facilities: room.facilities,
+    notes: room.notes
+  };
+
+  if (normalizedRole === 'visitor') {
+    return {
+      ...publicRoom,
+      profit: undefined,
+      totalCost: undefined,
+      owner: '平台管家',
+      ownerPhone: '',
+      tenant: '',
+      tenantPhone: '',
+      collector: '',
+      renter: '',
+      nextRentDate: ''
+    };
+  }
+
+  if (normalizedRole === 'investor') {
+    return {
+      ...room,
+      owner: '已脱敏',
+      ownerPhone: '',
+      tenant: room.tenant ? '已脱敏' : '',
+      tenantPhone: ''
+    };
+  }
+
+  if (normalizedRole === 'collector') {
+    return {
+      ...room,
+      tenant: room.tenant ? '已脱敏' : '',
+      tenantPhone: '',
+      nextRentDate: ''
+    };
+  }
+
+  if (normalizedRole === 'renter') {
+    return {
+      ...room,
+      owner: room.owner ? '已脱敏' : '',
+      ownerPhone: '',
+      totalCost: undefined
+    };
+  }
+
+  return room;
+}
+
+function dashboardForRole(data, role) {
+  const normalizedRole = normalizeRole(role);
+  const scopedData = {
+    ...data,
+    rooms: filterRoomsByRole(data.rooms, normalizedRole),
+    tasks: filterTasksByRole(data.tasks, normalizedRole)
+  };
+  const dashboard = buildDashboard(scopedData);
+
+  if (normalizedRole === 'visitor') {
+    dashboard.finance = { income: 0, expense: 0, profit: 0, month: dashboard.finance.month };
+    dashboard.bars = [];
+  } else if (normalizedRole === 'collector') {
+    dashboard.finance = {
+      income: 0,
+      expense: data.ledgers.find((item) => item.type === 'expense')?.amount || 0,
+      profit: 0,
+      month: dashboard.finance.month
+    };
+  } else if (normalizedRole === 'renter') {
+    dashboard.finance = {
+      income: data.ledgers.find((item) => item.type === 'income')?.amount || 0,
+      expense: 0,
+      profit: 0,
+      month: dashboard.finance.month
+    };
+  }
+
+  return dashboard;
+}
+
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -250,6 +381,7 @@ app.get('/health', (req, res) => {
 
 app.get('/api/bootstrap', (req, res) => {
   const data = readStore();
+  const role = normalizeRole(req.query.role || 'admin');
   res.json({
     roles: [
       { key: 'visitor', name: '访客', desc: '看房、收藏、预约' },
@@ -258,18 +390,20 @@ app.get('/api/bootstrap', (req, res) => {
       { key: 'collector', name: '收房员', desc: '收房工单、录入' },
       { key: 'renter', name: '出租员', desc: '出房、合同、租客' }
     ],
-    dashboard: buildDashboard(data)
+    dashboard: dashboardForRole(data, role)
   });
 });
 
 app.get('/api/dashboard', (req, res) => {
-  res.json(buildDashboard(readStore()));
+  const role = normalizeRole(req.query.role || 'admin');
+  res.json(dashboardForRole(readStore(), role));
 });
 
 app.get('/api/rooms', (req, res) => {
   const { keyword = '', status = 'all' } = req.query;
+  const role = normalizeRole(req.query.role || 'visitor');
   const normalizedKeyword = String(keyword).trim().toLowerCase();
-  let rooms = readStore().rooms;
+  let rooms = filterRoomsByRole(readStore().rooms, role);
 
   if (status !== 'all') {
     rooms = rooms.filter((room) => room.status === status);
@@ -283,16 +417,22 @@ app.get('/api/rooms', (req, res) => {
     });
   }
 
-  res.json({ rooms });
+  res.json({ rooms: rooms.map((room) => sanitizeRoomForRole(room, role)) });
 });
 
 app.get('/api/rooms/:id', (req, res) => {
-  const room = readStore().rooms.find((item) => item.id === req.params.id);
+  const role = normalizeRole(req.query.role || 'visitor');
+  const room = filterRoomsByRole(readStore().rooms, role).find((item) => item.id === req.params.id);
   if (!room) return res.status(404).json({ error: 'room not found' });
-  res.json(room);
+  res.json(sanitizeRoomForRole(room, role));
 });
 
 app.post('/api/rooms', (req, res) => {
+  const role = normalizeRole(req.query.role || (req.body && req.body.role) || 'visitor');
+  if (role !== 'admin' && role !== 'collector') {
+    return res.status(403).json({ error: 'current role cannot create rooms' });
+  }
+
   const data = readStore();
   const payload = req.body || {};
   const room = {
@@ -341,6 +481,11 @@ app.post('/api/rooms', (req, res) => {
 });
 
 app.patch('/api/rooms/:id', (req, res) => {
+  const role = normalizeRole(req.query.role || (req.body && req.body.role) || 'visitor');
+  if (role !== 'admin' && role !== 'collector' && role !== 'renter') {
+    return res.status(403).json({ error: 'current role cannot update rooms' });
+  }
+
   const data = readStore();
   const room = data.rooms.find((item) => item.id === req.params.id);
   if (!room) return res.status(404).json({ error: 'room not found' });
@@ -352,19 +497,17 @@ app.patch('/api/rooms/:id', (req, res) => {
 
 app.get('/api/tasks', (req, res) => {
   const { type = 'all', role = 'all' } = req.query;
-  let tasks = readStore().tasks;
+  let tasks = role === 'all' ? readStore().tasks : filterTasksByRole(readStore().tasks, role);
 
   if (type !== 'all') tasks = tasks.filter((task) => task.type === type);
-  if (role !== 'all' && role !== 'admin') {
-    tasks = tasks.filter((task) => task.assigneeRole === role || task.assigneeRole === 'admin');
-  }
 
   res.json({ tasks });
 });
 
 app.patch('/api/tasks/:id/complete', (req, res) => {
   const data = readStore();
-  const task = data.tasks.find((item) => item.id === req.params.id);
+  const role = normalizeRole(req.query.role || (req.body && req.body.role) || 'visitor');
+  const task = filterTasksByRole(data.tasks, role).find((item) => item.id === req.params.id);
   if (!task) return res.status(404).json({ error: 'task not found' });
 
   task.status = 'done';
@@ -375,11 +518,12 @@ app.patch('/api/tasks/:id/complete', (req, res) => {
 });
 
 app.get('/api/finance/summary', (req, res) => {
+  const role = normalizeRole(req.query.role || 'admin');
   const data = readStore();
   res.json({
     month: '2026 年 7 月',
-    ledger: data.ledgers,
-    dashboard: buildDashboard(data)
+    ledger: role === 'admin' || role === 'investor' ? data.ledgers : [],
+    dashboard: dashboardForRole(data, role)
   });
 });
 
