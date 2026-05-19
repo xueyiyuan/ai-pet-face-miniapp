@@ -32,12 +32,15 @@
 
 .stats-grid {
   margin-top: 24rpx;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18rpx;
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -18rpx;
 }
 
 .stat-card {
+  width: calc(50% - 18rpx);
+  margin-right: 18rpx;
+  margin-bottom: 18rpx;
   padding: 28rpx;
 }
 
@@ -69,7 +72,8 @@
   width: 200rpx;
   height: 200rpx;
   border-radius: 50%;
-  background: conic-gradient(#18a058 0 34%, #fb8c00 34% 67%, #8a94a6 67% 100%);
+  border: 28rpx solid #fb8c00;
+  background: #18a058;
   display: flex;
   align-items: center;
   justify-content: center;

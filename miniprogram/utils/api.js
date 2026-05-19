@@ -2,7 +2,7 @@ const mock = require('../data/mock');
 
 function baseUrl() {
   const app = getApp();
-  return (app.globalData.apiBase || '').replace(/\/$/, '');
+  return (app.globalData.rentalApiBase || 'http://localhost:3010').replace(/\/$/, '');
 }
 
 function request(path, options = {}) {
@@ -84,7 +84,15 @@ module.exports = {
     return withFallback(request('/api/rooms', { method: 'POST', data }), () => {
       const room = {
         id: `local-${Date.now()}`,
-        ...data,
+        title: data.title,
+        community: data.community,
+        roomNo: data.roomNo,
+        address: data.address,
+        layout: data.layout,
+        area: data.area,
+        rent: data.rent,
+        owner: data.owner,
+        notes: data.notes,
         image: '/assets/rooms/room-2.jpg',
         status: 'pending',
         statusText: '待审核',

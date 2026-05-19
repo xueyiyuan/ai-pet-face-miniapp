@@ -29,15 +29,14 @@ Page({
     }
 
     this.setData({ submitting: true });
-    api.createRoom({
-      ...form,
+    api.createRoom(Object.assign({}, form, {
       title: `${form.community} ${form.roomNo}`,
       area: Number(form.area || 45),
       rent: Number(form.rent || 0),
       status: 'pending',
       statusText: '待审核',
       facilities: ['新录入', '待验房']
-    }).then((room) => {
+    })).then((room) => {
       wx.showToast({ title: '已新增', icon: 'success' });
       setTimeout(() => {
         wx.redirectTo({ url: `/pages/room/room?id=${room.id}` });

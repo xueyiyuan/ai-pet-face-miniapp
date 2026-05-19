@@ -28,9 +28,9 @@ Page({
 
   openMenu(event) {
     const target = event.currentTarget.dataset.target;
-    if (target === 'home') wx.switchTab({ url: '/pages/home/home' });
-    if (target === 'manage') wx.switchTab({ url: '/pages/manage/manage' });
-    if (target === 'dashboard') wx.switchTab({ url: '/pages/dashboard/dashboard' });
+    if (target === 'home') wx.navigateTo({ url: '/pages/home/home' });
+    if (target === 'manage') wx.navigateTo({ url: '/pages/manage/manage' });
+    if (target === 'dashboard') wx.navigateTo({ url: '/pages/dashboard/dashboard' });
     if (target === 'service') wx.showModal({ title: '客服热线', content: '0755-88888888', showCancel: false });
   },
 

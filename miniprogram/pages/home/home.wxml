@@ -7,6 +7,12 @@
     <button class="add-btn" bindtap="goCreateRoom">＋</button>
   </view>
 
+  <view class="quick-nav">
+    <button bindtap="goDashboard">统计</button>
+    <button bindtap="goManage">待办</button>
+    <button bindtap="goMe">我的</button>
+  </view>
+
   <view class="search-row">
     <input value="{{keyword}}" bindinput="inputKeyword" bindconfirm="search" placeholder="输入小区、房号、业主" confirm-type="search" />
     <button bindtap="search">搜索</button>
@@ -14,12 +20,12 @@
 
   <scroll-view class="filter-scroll" scroll-x enhanced show-scrollbar="{{false}}">
     <block wx:for="{{filters}}" wx:key="key">
-      <view class="filter-chip {{status === item.key ? 'active' : ''}}" data-status="{{item.key}}" bindtap="changeFilter">{{item.label}}</view>
+      <view class="filter-chip {{item.activeClass}}" data-status="{{item.key}}" bindtap="changeFilter">{{item.label}}</view>
     </block>
   </scroll-view>
 
   <view class="section-title">推荐房源</view>
-  <view wx:if="{{!rooms.length && !loading}}" class="empty">暂无房源</view>
+  <view wx:if="{{emptyVisible}}" class="empty">暂无房源</view>
   <block wx:for="{{rooms}}" wx:key="id">
     <view class="room-card card" data-id="{{item.id}}" bindtap="goRoom">
       <image class="room-image" mode="aspectFill" src="{{item.image}}" />

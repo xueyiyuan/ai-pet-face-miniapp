@@ -6,13 +6,14 @@ Page({
     keyword: '',
     status: 'all',
     filters: [
-      { key: 'all', label: '全部' },
-      { key: 'renting', label: '已出租' },
-      { key: 'available', label: '空置' },
-      { key: 'pending', label: '待审核' }
+      { key: 'all', label: '全部', activeClass: 'active' },
+      { key: 'renting', label: '已出租', activeClass: '' },
+      { key: 'available', label: '空置', activeClass: '' },
+      { key: 'pending', label: '待审核', activeClass: '' }
     ],
     rooms: [],
-    loading: false
+    loading: false,
+    emptyVisible: false
   },
 
   onShow() {
@@ -25,11 +26,11 @@ Page({
     this.setData({ loading: true });
     api.getRooms({ keyword: this.data.keyword, status: this.data.status }).then((data) => {
       this.setData({
-        rooms: (data.rooms || []).map((room) => ({
-          ...room,
+        rooms: (data.rooms || []).map((room) => Object.assign({}, room, {
           tagClass: room.status === 'renting' ? '' : room.status === 'available' ? 'orange' : 'gray'
         })),
-        loading: false
+        loading: false,
+        emptyVisible: !(data.rooms || []).length
       });
     });
   },
@@ -43,7 +44,13 @@ Page({
   },
 
   changeFilter(event) {
-    this.setData({ status: event.currentTarget.dataset.status }, () => this.loadRooms());
+    const status = event.currentTarget.dataset.status;
+    this.setData({
+      status,
+      filters: this.data.filters.map((item) => Object.assign({}, item, {
+        activeClass: item.key === status ? 'active' : ''
+      }))
+    }, () => this.loadRooms());
   },
 
   goRoom(event) {
@@ -52,5 +59,17 @@ Page({
 
   goCreateRoom() {
     wx.navigateTo({ url: '/pages/room-form/room-form' });
+  },
+
+  goDashboard() {
+    wx.navigateTo({ url: '/pages/dashboard/dashboard' });
+  },
+
+  goManage() {
+    wx.navigateTo({ url: '/pages/manage/manage' });
+  },
+
+  goMe() {
+    wx.navigateTo({ url: '/pages/me/me' });
   }
 });

@@ -4,8 +4,13 @@
       <view class="tool-title">经营待办</view>
       <view class="tool-desc">当前身份：{{role}}</view>
     </view>
-    <button class="tool-add" bindtap="goCreateRoom">新增房源</button>
+    <view class="tool-actions">
+      <button bindtap="goDashboard">统计</button>
+      <button bindtap="goMe">我的</button>
+    </view>
   </view>
+
+  <button class="create-btn" bindtap="goCreateRoom">新增房源</button>
 
   <scroll-view class="tabs" scroll-x enhanced show-scrollbar="{{false}}">
     <block wx:for="{{tabs}}" wx:key="key">

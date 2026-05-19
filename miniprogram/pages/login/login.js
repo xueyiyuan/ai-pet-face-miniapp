@@ -23,6 +23,6 @@ Page({
     const app = getApp();
     app.globalData.role = this.data.selected;
     wx.setStorageSync('rental-role', this.data.selected);
-    wx.switchTab({ url: '/pages/home/home' });
+    wx.redirectTo({ url: '/pages/home/home' });
   }
 });

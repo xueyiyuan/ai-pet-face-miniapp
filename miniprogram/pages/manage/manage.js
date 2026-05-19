@@ -23,8 +23,7 @@ Page({
   loadTasks() {
     api.getTasks({ type: this.data.type, role: this.data.role }).then((data) => {
       this.setData({
-        tasks: (data.tasks || []).map((task) => ({
-          ...task,
+        tasks: (data.tasks || []).map((task) => Object.assign({}, task, {
           typeText: this.typeText(task.type)
         }))
       });
@@ -58,5 +57,13 @@ Page({
 
   goCreateRoom() {
     wx.navigateTo({ url: '/pages/room-form/room-form' });
+  },
+
+  goDashboard() {
+    wx.navigateTo({ url: '/pages/dashboard/dashboard' });
+  },
+
+  goMe() {
+    wx.navigateTo({ url: '/pages/me/me' });
   }
 });

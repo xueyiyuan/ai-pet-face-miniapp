@@ -14,13 +14,12 @@ Page({
   loadRoom() {
     api.getRoom(this.data.id).then((room) => {
       this.setData({
-        room: {
-          ...room,
+        room: Object.assign({}, room, {
           tagClass: room.status === 'renting' ? '' : room.status === 'available' ? 'orange' : 'gray',
           renterText: room.renter || '待分配',
           tenantText: room.tenant || '暂无',
           tenantPhoneText: room.tenantPhone || '空置中'
-        }
+        })
       });
     });
   },
@@ -41,6 +40,6 @@ Page({
   },
 
   openTask() {
-    wx.switchTab({ url: '/pages/manage/manage' });
+    wx.navigateTo({ url: '/pages/manage/manage' });
   }
 });

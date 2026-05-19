@@ -1,10 +1,13 @@
 <view class="container index-page">
   <view class="hero">
-    <view class="brand">AI 创意小工具</view>
-    <view class="title">上传照片，用文字生成新图片</view>
-    <view class="subtitle">可以上传任意照片，再输入你的想法，例如换风格、换场景、生成头像或海报。</view>
-    <button class="primary-btn start-btn" bindtap="goCreate">AI 生成图片</button>
-    <button class="secondary-btn" bindtap="goUpload">宠物面相报告</button>
-    <view class="notice">图片生成依赖后端配置的中转站模型；请勿上传违法、侵权或敏感图片。</view>
+    <view class="brand">应用中心</view>
+    <view class="title">选择要演示的功能</view>
+    <view class="subtitle">原 AI 功能已恢复；租房经营 MVP 作为独立模块入口保留在这里。</view>
+
+    <button class="primary-btn start-btn" bindtap="goCreate">AI P 图 / 生成图片</button>
+    <button class="secondary-btn green" bindtap="goUpload">AI 宠物面相</button>
+    <button class="secondary-btn orange" bindtap="goRental">寓管家租房经营 MVP</button>
+
+    <view class="notice">AI 功能使用线上后端；租房 MVP 使用本地 mock 后端，未启动时也会自动读取内置演示数据。</view>
   </view>
 </view>

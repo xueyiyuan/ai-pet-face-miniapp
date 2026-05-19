@@ -31,6 +31,12 @@ button::after {
   padding: 24rpx;
 }
 
+.container {
+  min-height: 100vh;
+  padding: 32rpx;
+  box-sizing: border-box;
+}
+
 .safe-bottom {
   height: 48rpx;
 }

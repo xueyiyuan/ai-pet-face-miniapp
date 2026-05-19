@@ -1,6 +1,7 @@
 App({
   globalData: {
-    apiBase: 'http://localhost:3010',
+    apiBase: 'https://aipet.szlucky.online',
+    rentalApiBase: 'http://localhost:3010',
     role: 'admin'
   },
 
