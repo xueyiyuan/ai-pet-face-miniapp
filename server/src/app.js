@@ -5,538 +5,493 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
+const imageModelConfig = require('./config/imageModel');
 
 const app = express();
-const port = Number(process.env.PORT || 3010);
+const port = Number(process.env.PORT || 3000);
+const publicBaseUrl = process.env.PUBLIC_BASE_URL || '';
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+const generatedDir = path.join(__dirname, '..', 'generated');
 const dataDir = path.join(__dirname, '..', 'data');
-const dataFile = path.join(dataDir, 'rental-mvp.json');
+const reportsFile = path.join(dataDir, 'reports.json');
+const generationsFile = path.join(dataDir, 'image-generations.json');
 
+fs.mkdirSync(uploadsDir, { recursive: true });
+fs.mkdirSync(generatedDir, { recursive: true });
 fs.mkdirSync(dataDir, { recursive: true });
 
-const seedData = {
-  rooms: [
-    {
-      id: 'room-403',
-      title: '中辉样板 403',
-      community: '中辉样板',
-      address: '广东省深圳市宝安区西乡街道 188 号',
-      layout: '1室1厅1卫',
-      area: 52.75,
-      floor: '4/18',
-      direction: '南',
-      status: 'renting',
-      statusText: '出租中',
-      rent: 3000,
-      totalCost: 360000,
-      profit: 10,
-      owner: '刘先生',
-      ownerPhone: '13888888888',
-      tenant: '李女士',
-      tenantPhone: '13666666666',
-      collector: 'A业务员',
-      renter: '出租员张',
-      nextRentDate: '2026-07-02',
-      image: '/assets/rooms/room-1.jpg',
-      facilities: ['冰箱', '洗衣机', '独立卫浴', '采光大窗'],
-      notes: '近地铁，精装可拎包入住，适合白领单人或情侣。'
-    },
-    {
-      id: 'room-188',
-      title: '前海公寓 188',
-      community: '前海公寓',
-      address: '广东省深圳市南山区前海路 188 号',
-      layout: '2室1厅1卫',
-      area: 67.2,
-      floor: '12/28',
-      direction: '东南',
-      status: 'available',
-      statusText: '待出租',
-      rent: 4200,
-      totalCost: 520000,
-      profit: 14,
-      owner: '王女士',
-      ownerPhone: '13999999999',
-      tenant: '',
-      tenantPhone: '',
-      collector: 'B业务员',
-      renter: '出租员李',
-      nextRentDate: '',
-      image: '/assets/rooms/room-2.jpg',
-      facilities: ['阳台', '智能门锁', '燃气灶', '双人床'],
-      notes: '通勤便利，适合小家庭，当前空置可立即带看。'
-    },
-    {
-      id: 'room-805',
-      title: '海岸城 805',
-      community: '海岸城',
-      address: '广东省深圳市南山区海德三道 68 号',
-      layout: '1室0厅1卫',
-      area: 38.5,
-      floor: '8/21',
-      direction: '西南',
-      status: 'pending',
-      statusText: '待审核',
-      rent: 2800,
-      totalCost: 300000,
-      profit: 8,
-      owner: '陈先生',
-      ownerPhone: '13777777777',
-      tenant: '',
-      tenantPhone: '',
-      collector: '收房员周',
-      renter: '',
-      nextRentDate: '',
-      image: '/assets/rooms/room-3.jpg',
-      facilities: ['热水器', '衣柜', '写字桌'],
-      notes: '收房资料待补齐，需管理员审核后上架。'
-    },
-    {
-      id: 'room-520',
-      title: '青年社区 520',
-      community: '青年社区',
-      address: '广东省深圳市龙华区民治大道 520 号',
-      layout: '3室2厅2卫',
-      area: 95,
-      floor: '3/27',
-      direction: '南北',
-      status: 'available',
-      statusText: '待出租',
-      rent: 6000,
-      totalCost: 680000,
-      profit: 16,
-      owner: '孙先生',
-      ownerPhone: '13555555555',
-      tenant: '',
-      tenantPhone: '',
-      collector: '收房员赵',
-      renter: '出租员张',
-      nextRentDate: '',
-      image: '/assets/rooms/room-4.jpg',
-      facilities: ['三房整租', '双卫', '大阳台', '客餐厅'],
-      notes: '适合合租或家庭整租，租金弹性空间大。'
-    }
-  ],
-  tasks: [
-    {
-      id: 'task-lease-1',
-      type: 'lease',
-      title: '中辉样板 403 合同待确认',
-      roomId: 'room-403',
-      roomTitle: '中辉样板 403',
-      assigneeRole: 'renter',
-      amount: 3000,
-      customer: '李女士',
-      dueAt: '2026-07-02 18:18',
-      status: 'pending',
-      statusText: '待确认'
-    },
-    {
-      id: 'task-out-1',
-      type: 'outbound',
-      title: '前海公寓 188 待出房',
-      roomId: 'room-188',
-      roomTitle: '前海公寓 188',
-      assigneeRole: 'renter',
-      amount: 4200,
-      customer: '待匹配租客',
-      dueAt: '2026-07-03 10:00',
-      status: 'pending',
-      statusText: '待处理'
-    },
-    {
-      id: 'task-collect-1',
-      type: 'collect',
-      title: '海岸城 805 收房资料待补齐',
-      roomId: 'room-805',
-      roomTitle: '海岸城 805',
-      assigneeRole: 'collector',
-      amount: 2800,
-      customer: '陈先生',
-      dueAt: '2026-07-01 15:30',
-      status: 'pending',
-      statusText: '待处理'
-    },
-    {
-      id: 'task-rent-1',
-      type: 'rent',
-      title: '中辉样板 403 本月租金待收',
-      roomId: 'room-403',
-      roomTitle: '中辉样板 403',
-      assigneeRole: 'admin',
-      amount: 3000,
-      customer: '李女士',
-      dueAt: '2026-07-02 18:18',
-      status: 'pending',
-      statusText: '未交租'
-    }
-  ],
-  ledgers: [
-    { id: 'ledger-1', type: 'income', label: '租金收入', amount: 123600, month: '2026-07' },
-    { id: 'ledger-2', type: 'expense', label: '收房支出', amount: 52630, month: '2026-07' },
-    { id: 'ledger-3', type: 'deposit', label: '押金', amount: 12360, month: '2026-07' },
-    { id: 'ledger-4', type: 'profit', label: '利润', amount: 58610, month: '2026-07' }
-  ]
-};
-
-function cloneSeedData() {
-  return JSON.parse(JSON.stringify(seedData));
-}
-
-function readStore() {
-  if (!fs.existsSync(dataFile)) {
-    writeStore(seedData);
-    return cloneSeedData();
-  }
+function readJsonFile(filePath, fallback) {
+  if (!fs.existsSync(filePath)) return fallback;
 
   try {
-    return JSON.parse(fs.readFileSync(dataFile, 'utf8'));
+    const raw = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(raw || JSON.stringify(fallback));
   } catch (err) {
-    console.error('Failed to read rental MVP store:', err);
-    return cloneSeedData();
+    console.error(`Failed to read ${filePath}:`, err);
+    return fallback;
   }
 }
 
-function writeStore(data) {
-  fs.writeFileSync(dataFile, JSON.stringify(data, null, 2), 'utf8');
+function writeJsonFile(filePath, data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
-function money(value) {
-  return Number(value || 0);
+function upsertGeneration(record) {
+  const generations = readJsonFile(generationsFile, []);
+  const index = generations.findIndex((item) => item.generationId === record.generationId);
+
+  if (index >= 0) {
+    generations[index] = {
+      ...generations[index],
+      ...record,
+      updatedAt: new Date().toISOString()
+    };
+  } else {
+    generations.unshift({
+      ...record,
+      createdAt: record.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  writeJsonFile(generationsFile, generations);
+  return generations[index >= 0 ? index : 0];
 }
 
-function buildDashboard(data) {
-  const renting = data.rooms.filter((room) => room.status === 'renting').length;
-  const available = data.rooms.filter((room) => room.status === 'available').length;
-  const pending = data.rooms.filter((room) => room.status === 'pending').length;
-  const income = data.ledgers.find((item) => item.type === 'income')?.amount || 0;
-  const expense = data.ledgers.find((item) => item.type === 'expense')?.amount || 0;
-  const profit = data.ledgers.find((item) => item.type === 'profit')?.amount || 0;
+function getRequestBaseUrl(req) {
+  if (publicBaseUrl) return publicBaseUrl.replace(/\/$/, '');
+  return `${req.protocol}://${req.get('host')}`;
+}
+
+function publicUrl(req, folder, filename) {
+  return `${getRequestBaseUrl(req)}/${folder}/${filename}`;
+}
+
+function pick(seed, items) {
+  let hash = 0;
+  for (const char of seed) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+  return items[hash % items.length];
+}
+
+function generateReport({ petName, petType, imageUrl }) {
+  const name = (petName || '').trim() || '小主子';
+  const type = petType || 'unknown';
+  const typeName = {
+    cat: '猫猫',
+    dog: '狗狗',
+    other: '毛孩子',
+    unknown: '毛孩子'
+  }[type] || '毛孩子';
+  const seed = `${name}:${type}:${imageUrl}`;
+
+  const label = pick(seed, [
+    '高冷富贵命',
+    '饭碗守护者',
+    '人间撒娇王',
+    '家宅巡逻官',
+    '好运小雷达',
+    '被窝风水大师'
+  ]);
+  const personality = pick(`${seed}:personality`, [
+    '外表淡定，内心戏很足，擅长用一个眼神管理全家节奏。',
+    '亲近人但有边界感，熟悉之后会把撒娇和指挥结合得非常自然。',
+    '行动力强，好奇心旺，看到新鲜东西会先观察三秒再决定要不要接管现场。',
+    '情绪稳定，安全感来自固定的作息、熟悉的气味和主人及时出现。'
+  ]);
+  const ownerView = pick(`${seed}:owner`, [
+    '它觉得你是长期饭票、移动靠垫，也是它愿意信任的安全基地。',
+    '它大概率认为你有点好拿捏，但总体服务态度不错，值得继续培养。',
+    '它把你当成同住伙伴，偶尔嫌你吵，但你不在时又会悄悄找你。',
+    '它眼里的你很可靠，只要你按时喂饭、陪玩、夸它，就能保持高分。'
+  ]);
+  const fortune = pick(`${seed}:fortune`, [
+    '最近适合添置新玩具，容易收获更多关注和摸摸。',
+    '本周有吃好、睡好、被夸好的运势，适合保持规律作息。',
+    '近期家中人气上升，它会更愿意参与家庭活动。',
+    '今日宜晒太阳、喝水、舒展身体，整体气场偏松弛。'
+  ]);
+  const healthTips = pick(`${seed}:health`, [
+    '建议继续观察饮水、食欲、精神状态和排便情况，发现异常请及时咨询兽医。',
+    '可以多留意毛发光泽、体重变化和活动量，日常护理比临时补救更重要。',
+    '保持干净饮水和稳定饮食，不要频繁更换主粮或零食。',
+    '适量互动和环境丰富化有助于释放精力，也能减少无聊带来的小脾气。'
+  ]);
 
   return {
-    stats: [
-      { label: '总房源', value: data.rooms.length, unit: '套' },
-      { label: '在租', value: renting, unit: '套' },
-      { label: '空置', value: available, unit: '套' },
-      { label: '待办', value: data.tasks.filter((task) => task.status === 'pending').length, unit: '项' }
-    ],
-    finance: { income, expense, profit, month: '2026 年 7 月' },
-    occupancy: [
-      { label: '在租', value: renting },
-      { label: '空置', value: available },
-      { label: '待审', value: pending }
-    ],
-    bars: [
-      { label: '支出', value: expense, height: 46 },
-      { label: '收入', value: income, height: 92 },
-      { label: '押金', value: 12360, height: 24 },
-      { label: '利润', value: profit, height: 58 }
-    ]
+    reportId: uuidv4(),
+    petName: name,
+    petType: type,
+    petTypeName: typeName,
+    imageUrl,
+    isPaid: false,
+    freeReport: {
+      title: `${name} 的宠物面相报告`,
+      label,
+      summary: `这是一只自带存在感的${typeName}，气质关键词是“${label}”。`,
+      personality,
+      ownerView,
+      shareText: `AI 看出 ${name} 是「${label}」，快来看看你家毛孩子是什么隐藏命格。`
+    },
+    paidReport: {
+      deepPersonality: pick(`${seed}:deep`, [
+        `${name} 对环境变化很敏感，喜欢先确认安全，再慢慢释放真实状态。`,
+        `${name} 很会读空气，能分辨主人是真忙还是假装忙，互动策略相当灵活。`,
+        `${name} 的核心需求是稳定陪伴，它会通过靠近、跟随或轻声表达存在感。`
+      ]),
+      fortune,
+      relationship: pick(`${seed}:relationship`, [
+        '你们的关系像室友加家人：它保留主权，你负责提供爱、饭和舒适空间。',
+        '它对你的信任是逐步建立的，稳定回应会让它更愿意表达亲近。',
+        '你在它心里属于重要人物，但它会偶尔用小脾气测试你的耐心。'
+      ]),
+      healthTips,
+      luckyItem: pick(`${seed}:item`, ['软垫小窝', '逗猫棒', '慢食碗', '磨牙玩具', '晒太阳角落']),
+      luckyFood: pick(`${seed}:food`, ['鸡胸肉冻干', '南瓜小零食', '清水煮鱼肉', '低脂宠物罐头']),
+      exclusiveComment: `今天这张脸，属于一看就很会过日子的${typeName}。请继续认真供养，福气会回到主人身上。`
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 }
 
-function normalizeRole(role) {
-  return ['visitor', 'admin', 'investor', 'collector', 'renter'].includes(role) ? role : 'visitor';
+function getRelayEndpoint() {
+  const base = imageModelConfig.baseUrl.replace(/\/$/, '');
+  const pathPart = imageModelConfig.editPath.startsWith('/')
+    ? imageModelConfig.editPath
+    : `/${imageModelConfig.editPath}`;
+  return `${base}${pathPart}`;
 }
 
-function filterRoomsByRole(rooms, role) {
-  const normalizedRole = normalizeRole(role);
-
-  if (normalizedRole === 'admin' || normalizedRole === 'investor') return rooms;
-  if (normalizedRole === 'visitor') {
-    return rooms.filter((room) => room.status === 'available' || room.status === 'renting');
-  }
-  if (normalizedRole === 'collector') {
-    return rooms.filter((room) => room.status === 'pending' || String(room.collector || '').includes('收房员'));
-  }
-  if (normalizedRole === 'renter') {
-    return rooms.filter((room) => room.status === 'available' || room.status === 'renting' || Boolean(room.renter));
-  }
-
-  return [];
+function getGeneratedFileExtension(contentType, preferredFormat) {
+  if (contentType && contentType.includes('jpeg')) return '.jpg';
+  if (contentType && contentType.includes('webp')) return '.webp';
+  if (contentType && contentType.includes('png')) return '.png';
+  return `.${preferredFormat || 'png'}`;
 }
 
-function filterTasksByRole(tasks, role) {
-  const normalizedRole = normalizeRole(role);
+function findImagePayload(value) {
+  if (!value || typeof value !== 'object') return null;
 
-  if (normalizedRole === 'admin') return tasks;
-  if (normalizedRole === 'collector') {
-    return tasks.filter((task) => task.assigneeRole === 'collector' || task.type === 'collect');
+  if (typeof value.b64_json === 'string') {
+    return { type: 'base64', value: value.b64_json };
   }
-  if (normalizedRole === 'renter') {
-    return tasks.filter((task) => task.assigneeRole === 'renter' || ['outbound', 'lease', 'rent'].includes(task.type));
+  if (typeof value.image_base64 === 'string') {
+    return { type: 'base64', value: value.image_base64 };
+  }
+  if (typeof value.url === 'string') {
+    return { type: 'url', value: value.url };
   }
 
-  return [];
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findImagePayload(item);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  for (const item of Object.values(value)) {
+    const found = findImagePayload(item);
+    if (found) return found;
+  }
+  return null;
 }
 
-function sanitizeRoomForRole(room, role) {
-  const normalizedRole = normalizeRole(role);
-  const publicRoom = {
-    id: room.id,
-    title: room.title,
-    community: room.community,
-    address: room.address,
-    layout: room.layout,
-    area: room.area,
-    floor: room.floor,
-    direction: room.direction,
-    status: room.status,
-    statusText: room.statusText,
-    rent: room.rent,
-    image: room.image,
-    facilities: room.facilities,
-    notes: room.notes
-  };
+async function fetchWithTimeout(url, options = {}, timeoutMs = imageModelConfig.timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (normalizedRole === 'visitor') {
-    return {
-      ...publicRoom,
-      profit: undefined,
-      totalCost: undefined,
-      owner: '平台管家',
-      ownerPhone: '',
-      tenant: '',
-      tenantPhone: '',
-      collector: '',
-      renter: '',
-      nextRentDate: ''
-    };
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error(`Image relay request timed out after ${Math.round(timeoutMs / 1000)} seconds`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-
-  if (normalizedRole === 'investor') {
-    return {
-      ...room,
-      owner: '已脱敏',
-      ownerPhone: '',
-      tenant: room.tenant ? '已脱敏' : '',
-      tenantPhone: ''
-    };
-  }
-
-  if (normalizedRole === 'collector') {
-    return {
-      ...room,
-      tenant: room.tenant ? '已脱敏' : '',
-      tenantPhone: '',
-      nextRentDate: ''
-    };
-  }
-
-  if (normalizedRole === 'renter') {
-    return {
-      ...room,
-      owner: room.owner ? '已脱敏' : '',
-      ownerPhone: '',
-      totalCost: undefined
-    };
-  }
-
-  return room;
 }
 
-function dashboardForRole(data, role) {
-  const normalizedRole = normalizeRole(role);
-  const scopedData = {
-    ...data,
-    rooms: filterRoomsByRole(data.rooms, normalizedRole),
-    tasks: filterTasksByRole(data.tasks, normalizedRole)
-  };
-  const dashboard = buildDashboard(scopedData);
+async function saveGeneratedImage(req, payload) {
+  const filenameBase = `${Date.now()}-${uuidv4()}`;
 
-  if (normalizedRole === 'visitor') {
-    dashboard.finance = { income: 0, expense: 0, profit: 0, month: dashboard.finance.month };
-    dashboard.bars = [];
-  } else if (normalizedRole === 'collector') {
-    dashboard.finance = {
-      income: 0,
-      expense: data.ledgers.find((item) => item.type === 'expense')?.amount || 0,
-      profit: 0,
-      month: dashboard.finance.month
-    };
-  } else if (normalizedRole === 'renter') {
-    dashboard.finance = {
-      income: data.ledgers.find((item) => item.type === 'income')?.amount || 0,
-      expense: 0,
-      profit: 0,
-      month: dashboard.finance.month
-    };
+  if (payload.type === 'base64') {
+    const filename = `${filenameBase}.${imageModelConfig.outputFormat || 'png'}`;
+    const filePath = path.join(generatedDir, filename);
+    fs.writeFileSync(filePath, Buffer.from(payload.value, 'base64'));
+    return publicUrl(req, 'generated', filename);
   }
 
-  return dashboard;
+  if (payload.type === 'url') {
+    const response = await fetchWithTimeout(payload.value, {}, 30000);
+    if (!response.ok) {
+      throw new Error(`Failed to download generated image: ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    const ext = getGeneratedFileExtension(contentType, imageModelConfig.outputFormat);
+    const filename = `${filenameBase}${ext}`;
+    const filePath = path.join(generatedDir, filename);
+    const arrayBuffer = await response.arrayBuffer();
+    fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+    return publicUrl(req, 'generated', filename);
+  }
+
+  throw new Error('Unsupported generated image payload');
 }
+
+async function callImageRelay(req, file, prompt) {
+  if (typeof fetch !== 'function' || typeof FormData !== 'function' || typeof Blob !== 'function') {
+    throw new Error('Image generation requires Node.js 18 or newer');
+  }
+  if (!imageModelConfig.apiKey) {
+    throw new Error('IMAGE_RELAY_API_KEY is not configured');
+  }
+
+  const imageBuffer = fs.readFileSync(file.path);
+  const form = new FormData();
+  form.append('model', imageModelConfig.model);
+  form.append('prompt', prompt);
+  form.append('image', new Blob([imageBuffer], { type: file.mimetype || 'image/png' }), file.originalname || 'input.png');
+  form.append('n', String(imageModelConfig.n));
+  form.append('size', imageModelConfig.size);
+  form.append('output_format', imageModelConfig.outputFormat);
+
+  if (imageModelConfig.quality) form.append('quality', imageModelConfig.quality);
+  if (imageModelConfig.background) form.append('background', imageModelConfig.background);
+
+  const endpoint = getRelayEndpoint();
+  const startedAt = Date.now();
+  console.log(`[image-generation] calling relay model=${imageModelConfig.model} endpoint=${endpoint}`);
+
+  const response = await fetchWithTimeout(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${imageModelConfig.apiKey}`
+    },
+    body: form
+  }, imageModelConfig.timeoutMs);
+
+  console.log(`[image-generation] relay responded status=${response.status} elapsedMs=${Date.now() - startedAt}`);
+
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    throw new Error(`Image relay returned non-JSON response: ${text.slice(0, 200)}`);
+  }
+
+  if (!response.ok) {
+    const message = data.error && (data.error.message || data.error);
+    throw new Error(message || `Image relay request failed: ${response.status}`);
+  }
+
+  const imagePayload = findImagePayload(data);
+  if (!imagePayload) {
+    throw new Error('Image relay response did not include an image');
+  }
+
+  return saveGeneratedImage(req, imagePayload);
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadsDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase() || '.jpg';
+    cb(null, `${Date.now()}-${uuidv4()}${ext}`);
+  }
+});
+
+const imageUpload = multer({
+  storage,
+  limits: {
+    fileSize: imageModelConfig.maxInputBytes
+  },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const allowedExts = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
+    const mimeLooksLikeImage = file.mimetype && file.mimetype.startsWith('image/');
+
+    if (!mimeLooksLikeImage && !allowedExts.has(ext)) {
+      return cb(new Error('Only jpg, jpeg, png, gif and webp image files are allowed'));
+    }
+    cb(null, true);
+  }
+});
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '10mb' }));
+app.use('/uploads', express.static(uploadsDir));
+app.use('/generated', express.static(generatedDir));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 app.get('/health', (req, res) => {
   res.json({
     ok: true,
-    service: 'ziroom-style-rental-mvp',
-    dataFile,
+    service: 'ai-pet-face-server',
+    imageModel: {
+      baseUrl: imageModelConfig.baseUrl,
+      editPath: imageModelConfig.editPath,
+      model: imageModelConfig.model,
+      configured: Boolean(imageModelConfig.apiKey),
+      timeoutMs: imageModelConfig.timeoutMs
+    },
+    storage: {
+      uploadsDir,
+      generatedDir,
+      reportsFile,
+      generationsFile
+    },
     ts: new Date().toISOString()
   });
 });
 
-app.get('/api/bootstrap', (req, res) => {
-  const data = readStore();
-  const role = normalizeRole(req.query.role || 'admin');
+app.post('/api/uploads/pet-image', imageUpload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Please upload an image' });
+  }
+
   res.json({
-    roles: [
-      { key: 'visitor', name: '访客', desc: '看房、收藏、预约' },
-      { key: 'admin', name: '管理员', desc: '统计、房源、财务' },
-      { key: 'investor', name: '投资人', desc: '收益、出租率' },
-      { key: 'collector', name: '收房员', desc: '收房工单、录入' },
-      { key: 'renter', name: '出租员', desc: '出房、合同、租客' }
-    ],
-    dashboard: dashboardForRole(data, role)
+    imageUrl: publicUrl(req, 'uploads', req.file.filename),
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    mimeType: req.file.mimetype,
+    size: req.file.size
   });
 });
 
-app.get('/api/dashboard', (req, res) => {
-  const role = normalizeRole(req.query.role || 'admin');
-  res.json(dashboardForRole(readStore(), role));
-});
+app.post('/api/reports', (req, res) => {
+  const { imageUrl, petName, petType = 'unknown' } = req.body || {};
 
-app.get('/api/rooms', (req, res) => {
-  const { keyword = '', status = 'all' } = req.query;
-  const role = normalizeRole(req.query.role || 'visitor');
-  const normalizedKeyword = String(keyword).trim().toLowerCase();
-  let rooms = filterRoomsByRole(readStore().rooms, role);
-
-  if (status !== 'all') {
-    rooms = rooms.filter((room) => room.status === status);
+  if (!imageUrl) {
+    return res.status(400).json({ error: 'imageUrl is required' });
   }
 
-  if (normalizedKeyword) {
-    rooms = rooms.filter((room) => {
-      return [room.title, room.community, room.address, room.owner, room.tenant]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalizedKeyword));
+  const report = generateReport({ imageUrl, petName, petType });
+  const reports = readJsonFile(reportsFile, []);
+  reports.unshift(report);
+  writeJsonFile(reportsFile, reports);
+
+  res.json({
+    reportId: report.reportId,
+    isPaid: report.isPaid,
+    freeReport: report.freeReport,
+    paidPreview: Object.keys(report.paidReport)
+  });
+});
+
+app.get('/api/reports/:id', (req, res) => {
+  const report = readJsonFile(reportsFile, []).find((item) => item.reportId === req.params.id);
+  if (!report) return res.status(404).json({ error: 'report not found' });
+  res.json(report);
+});
+
+app.post('/api/reports/:id/unlock', (req, res) => {
+  const reports = readJsonFile(reportsFile, []);
+  const report = reports.find((item) => item.reportId === req.params.id);
+
+  if (!report) return res.status(404).json({ error: 'report not found' });
+
+  report.isPaid = true;
+  report.updatedAt = new Date().toISOString();
+  writeJsonFile(reportsFile, reports);
+
+  res.json({
+    ok: true,
+    report
+  });
+});
+
+app.post('/api/image-generations', imageUpload.single('file'), async (req, res, next) => {
+  try {
+    const prompt = (req.body && req.body.prompt ? String(req.body.prompt) : '').trim();
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Please upload an image' });
+    }
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' });
+    }
+
+    const inputImageUrl = publicUrl(req, 'uploads', req.file.filename);
+    console.log(`[image-generation] received file=${req.file.filename} size=${req.file.size} promptLength=${prompt.length}`);
+    const record = {
+      generationId: uuidv4(),
+      status: 'pending',
+      prompt,
+      inputImageUrl,
+      model: imageModelConfig.model,
+      createdAt: new Date().toISOString()
+    };
+
+    upsertGeneration(record);
+    res.status(202).json(record);
+
+    setImmediate(async () => {
+      try {
+        upsertGeneration({
+          generationId: record.generationId,
+          status: 'running'
+        });
+
+        const generatedImageUrl = await callImageRelay(req, req.file, prompt);
+
+        upsertGeneration({
+          generationId: record.generationId,
+          status: 'succeeded',
+          generatedImageUrl,
+          completedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error(`[image-generation] failed generationId=${record.generationId}:`, err);
+        upsertGeneration({
+          generationId: record.generationId,
+          status: 'failed',
+          error: err.message || 'Image generation failed',
+          completedAt: new Date().toISOString()
+        });
+      }
     });
+  } catch (err) {
+    next(err);
   }
-
-  res.json({ rooms: rooms.map((room) => sanitizeRoomForRole(room, role)) });
 });
 
-app.get('/api/rooms/:id', (req, res) => {
-  const role = normalizeRole(req.query.role || 'visitor');
-  const room = filterRoomsByRole(readStore().rooms, role).find((item) => item.id === req.params.id);
-  if (!room) return res.status(404).json({ error: 'room not found' });
-  res.json(sanitizeRoomForRole(room, role));
+app.get('/api/image-generations/:id', (req, res) => {
+  const record = readJsonFile(generationsFile, []).find((item) => item.generationId === req.params.id);
+  if (!record) return res.status(404).json({ error: 'generation not found' });
+  res.json(record);
 });
 
-app.post('/api/rooms', (req, res) => {
-  const role = normalizeRole(req.query.role || (req.body && req.body.role) || 'visitor');
-  if (role !== 'admin' && role !== 'collector') {
-    return res.status(403).json({ error: 'current role cannot create rooms' });
-  }
-
-  const data = readStore();
-  const payload = req.body || {};
-  const room = {
-    id: `room-${Date.now().toString(36)}`,
-    title: payload.title || `${payload.community || '新房源'} ${payload.roomNo || ''}`.trim(),
-    community: payload.community || '新录入小区',
-    address: payload.address || '待补充地址',
-    layout: payload.layout || '1室1厅1卫',
-    area: Number(payload.area || 45),
-    floor: payload.floor || '中楼层',
-    direction: payload.direction || '南',
-    status: payload.status || 'pending',
-    statusText: payload.statusText || '待审核',
-    rent: money(payload.rent || 3000),
-    totalCost: money(payload.totalCost || 0),
-    profit: money(payload.profit || 0),
-    owner: payload.owner || '待补充',
-    ownerPhone: payload.ownerPhone || '',
-    tenant: '',
-    tenantPhone: '',
-    collector: payload.collector || '收房员',
-    renter: payload.renter || '',
-    nextRentDate: '',
-    image: payload.image || '/assets/rooms/room-2.jpg',
-    facilities: Array.isArray(payload.facilities) ? payload.facilities : ['待补充配置'],
-    notes: payload.notes || '新录入房源，等待补齐资料和审核。'
-  };
-
-  data.rooms.unshift(room);
-  data.tasks.unshift({
-    id: `task-${uuidv4()}`,
-    type: 'collect',
-    title: `${room.title} 新房源待审核`,
-    roomId: room.id,
-    roomTitle: room.title,
-    assigneeRole: 'admin',
-    amount: room.rent,
-    customer: room.owner,
-    dueAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-    status: 'pending',
-    statusText: '待审核'
-  });
-  writeStore(data);
-
-  res.status(201).json(room);
-});
-
-app.patch('/api/rooms/:id', (req, res) => {
-  const role = normalizeRole(req.query.role || (req.body && req.body.role) || 'visitor');
-  if (role !== 'admin' && role !== 'collector' && role !== 'renter') {
-    return res.status(403).json({ error: 'current role cannot update rooms' });
-  }
-
-  const data = readStore();
-  const room = data.rooms.find((item) => item.id === req.params.id);
-  if (!room) return res.status(404).json({ error: 'room not found' });
-
-  Object.assign(room, req.body || {});
-  writeStore(data);
-  res.json(room);
-});
-
-app.get('/api/tasks', (req, res) => {
-  const { type = 'all', role = 'all' } = req.query;
-  let tasks = role === 'all' ? readStore().tasks : filterTasksByRole(readStore().tasks, role);
-
-  if (type !== 'all') tasks = tasks.filter((task) => task.type === type);
-
-  res.json({ tasks });
-});
-
-app.patch('/api/tasks/:id/complete', (req, res) => {
-  const data = readStore();
-  const role = normalizeRole(req.query.role || (req.body && req.body.role) || 'visitor');
-  const task = filterTasksByRole(data.tasks, role).find((item) => item.id === req.params.id);
-  if (!task) return res.status(404).json({ error: 'task not found' });
-
-  task.status = 'done';
-  task.statusText = '已处理';
-  task.completedAt = new Date().toISOString();
-  writeStore(data);
-  res.json(task);
-});
-
-app.get('/api/finance/summary', (req, res) => {
-  const role = normalizeRole(req.query.role || 'admin');
-  const data = readStore();
+app.post('/api/payments', (req, res) => {
   res.json({
-    month: '2026 年 7 月',
-    ledger: role === 'admin' || role === 'investor' ? data.ledgers : [],
-    dashboard: dashboardForRole(data, role)
+    ok: true,
+    mode: 'mock',
+    message: 'Local MVP uses mock payment. Integrate WeChat Pay before production paid access.'
   });
 });
 
-app.post('/api/demo/reset', (req, res) => {
-  writeStore(seedData);
-  res.json({ ok: true });
+app.post('/api/payments/wechat/callback', (req, res) => {
+  res.json({ ok: true, message: 'wechat payment callback reserved' });
 });
 
 app.use((err, req, res, next) => {
   console.error(err);
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: `Image file is too large, max ${Math.round(imageModelConfig.maxInputBytes / 1024 / 1024)}MB` });
+  }
   res.status(400).json({ error: err.message || 'bad request' });
 });
 
 app.listen(port, () => {
-  console.log(`Ziroom-style rental MVP server running at http://localhost:${port}`);
+  console.log(`AI Pet Face server running at http://localhost:${port}`);
 });

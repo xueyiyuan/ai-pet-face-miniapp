@@ -95,7 +95,8 @@ Page({
         try {
           data = JSON.parse(res.data || '{}');
         } catch (err) {
-          this.finishWithError('后端返回的不是 JSON，请查看服务器日志。');
+          const raw = String(res.data || '').replace(/\s+/g, ' ').slice(0, 120);
+          this.finishWithError(`后端返回的不是 JSON，状态码 ${res.statusCode}。返回内容：${raw || '空响应'}`);
           return;
         }
 
